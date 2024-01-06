@@ -269,7 +269,7 @@ export default function Verification(props) {
   }
  
   React.useEffect(() => {
-    fetch(BASE_URL + "user/admin-get-user-verification")
+    fetch(BASE_URL + "public/admin-get-user-verification")
       .then(res => res.json())
       .then(
         (result) => {
