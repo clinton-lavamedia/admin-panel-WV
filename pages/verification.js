@@ -49,7 +49,7 @@ import Router, { useRouter } from 'next/router';
   }).isRequired,
 }; */
 
-const BASE_URL = 'http://ec2-13-126-83-192.ap-south-1.compute.amazonaws.com/'
+const BASE_URL = 'https://ec2-13-126-83-192.ap-south-1.compute.amazonaws.com/'
 //const BASE_URL = 'http://192.168.1.104/'
 export default function Verification(props) {
   const [error, setError] = React.useState(null);
@@ -97,7 +97,7 @@ export default function Verification(props) {
     //setApproval(option);
   };
   function handleApprove(payload) {
-    fetch(BASE_URL + 'user/admin-update-user-verification', {
+    fetch(BASE_URL + 'public/admin-update-user-verification', {
       method: 'POST',
       mode: 'cors',
       headers: {

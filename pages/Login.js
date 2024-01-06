@@ -18,8 +18,8 @@ import MuiAlert from '@mui/material/Alert';
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
-//const BASE_URL = 'http://192.168.1.104/'
-const BASE_URL = 'http://ec2-13-126-83-192.ap-south-1.compute.amazonaws.com/'
+//const BASE_URL = 'https://192.168.1.104/'
+const BASE_URL = 'https://ec2-13-126-83-192.ap-south-1.compute.amazonaws.com/'
 
 export default function Login() {
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function Login() {
   };
  function handleLogin(){
   let payload={email:email,password:password}
-  fetch(BASE_URL + 'user/login-admin-user-verification', {
+  fetch(BASE_URL + 'public/login-admin-user-verification', {
     method: 'POST',
     mode: 'cors',
     headers: {
