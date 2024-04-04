@@ -26,9 +26,7 @@
     "next": "latest",
     "prop-types": "latest",
     "react": "latest",
-    "react-dom": "latest",
-    "react-vis": "^1.12.1",
-    "recharts": "^2.12.4"
+    "react-dom": "latest"
   },
   "devDependencies": {
     "@types/node": "20.10.6",
