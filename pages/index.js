@@ -8,7 +8,9 @@ import Copyright from '../src/Copyright';
 import { AuthContext } from '../src/context/auth-context';
 import Router, { useRouter } from 'next/router';
 import Login from './Login'
+import Landing from './landing'
 import Verification from './verification';
+
 export default function Index() {
   /* const router = useRouter();
   const authContext = React.useContext(AuthContext);
@@ -38,7 +40,7 @@ export default function Index() {
         {!isUserAuthenticated ?
           <Login />
           :
-          <Verification />
+          <Landing />
         }
         {/*  <Typography variant="h4" component="h1" gutterBottom>
           Material UI - Next.js example

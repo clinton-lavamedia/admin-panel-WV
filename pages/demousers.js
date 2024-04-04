@@ -1,0 +1,204 @@
+import * as React from 'react';
+import PropTypes from 'prop-types';
+import Box from '@mui/material/Box';
+import Collapse from '@mui/material/Collapse';
+import IconButton from '@mui/material/IconButton';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TablePagination from '@mui/material/TablePagination';
+import Switch from '@mui/material/Switch';
+
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import Router, { useRouter } from 'next/router';
+const BASE_URL = process.env.NEXT_PUBLIC_BASEURL
+
+export default function DemoUsers() {
+    const [error, setError] = React.useState(null);
+    const [isLoaded, setIsLoaded] = React.useState(false);
+    const [items, setItems] = React.useState([]);
+    //const { row } = items;
+    const [open, setOpen] = React.useState(false);
+    const [approve, setApproval] = React.useState('reject');
+    const [refresh, setRefresh] = React.useState(false);
+    const [openReject, setOpenReject] = React.useState(false);
+    const [payload, setPayload] = React.useState({});
+    const [notes, setNotes] = React.useState('');
+    const [rerender, setRerender] = React.useState(false);
+    const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(25);
+  const [checked, setChecked] = React.useState(true);
+
+  const handleChange = (event) => {
+    setChecked(event.target.checked);
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
+  };
+
+    const router = useRouter();
+
+React.useEffect(() => {
+    fetch(BASE_URL + "/admin-get-demo-users")
+      .then(res => res.json())
+      .then(
+        (result) => {
+          console.log(result)
+          setIsLoaded(true);
+          let data = result.data;
+          for (let key in data) {
+          
+            data[key].open = false
+           
+            console.log(data)
+            // data.delete( data[key].image_urls)
+          }
+          setItems(data);
+        },
+        // Note: it's important to handle errors here
+        // instead of a catch() block so that we don't swallow
+        // exceptions from actual bugs in components.
+        (error) => {
+          setIsLoaded(true);
+          setError(error);
+        }
+      )
+  }, [refresh])
+  function openRow(user_id) {
+    for (let data in items) {
+      if (items[data].user_id == user_id) {
+        items[data].open = !items[data].open
+      }
+
+    }
+    console.log(items)
+    setItems(items)
+    setRerender(!rerender)
+  }
+  function Row(row) {
+    console.log(row)
+    row = row.row
+
+  return (
+    <React.Fragment>
+      <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+        <TableCell>
+         {/*  <IconButton
+            aria-label="expand row"
+            size="small"
+            onClick={() => openRow(row.user_id)}
+                      >
+            {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+          </IconButton> */}
+        </TableCell>
+        <TableCell component="th" scope="row"><Switch
+      checked={row.enabled}
+      onChange={handleChange}
+      inputProps={{ 'aria-label': 'controlled' }}
+    /></TableCell>
+        <TableCell  align="right" >
+          {row.suid}
+        </TableCell>
+       
+
+        <TableCell align="right">{row.id}</TableCell>
+
+        <TableCell align="right">{row.first_name}</TableCell>
+        <TableCell align="right">{row.last_name}</TableCell>
+        
+        <TableCell align="right">{row.college_id}</TableCell>
+
+      </TableRow>
+      <TableRow>
+      {/*   <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+          <Collapse in={open} timeout="auto" unmountOnExit>
+            <Box sx={{ margin: 1 }}>
+              <Typography variant="h6" gutterBottom component="div">
+                History
+              </Typography>
+              <Table size="small" aria-label="purchases">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Customer</TableCell>
+                    <TableCell align="right">Amount</TableCell>
+                    <TableCell align="right">Total price ($)</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {row.history.map((historyRow) => (
+                    <TableRow key={historyRow.date}>
+                      <TableCell component="th" scope="row">
+                        {historyRow.date}
+                      </TableCell>
+                      <TableCell>{historyRow.customerId}</TableCell>
+                      <TableCell align="right">{historyRow.amount}</TableCell>
+                      <TableCell align="right">
+                        {Math.round(historyRow.amount * row.price * 100) / 100}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Box>
+          </Collapse>
+        </TableCell> */}
+      </TableRow>
+    </React.Fragment>
+  );
+}
+
+
+  return (
+    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+
+            <Typography variant="h3" gutterBottom textAlign={'center'}>
+            Demo users
+      </Typography>
+    <TableContainer /* component={Paper}  */sx={{ maxHeight: 600 }}>
+      <Table stickyHeader size="small" aria-label="collapsible table">
+        <TableHead>
+          <TableRow>
+            <TableCell />
+            <TableCell >Enabled</TableCell>
+            <TableCell align="right">DemoUser DB ID</TableCell>
+
+            <TableCell align="right">User DB ID</TableCell>
+            <TableCell align="right">First name</TableCell>
+            <TableCell align="right">Last name</TableCell>
+            
+            <TableCell align="right">College</TableCell>
+
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {items.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+            <Row key={row.name} row={row} />
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+    <TablePagination
+    rowsPerPageOptions={[10, 25, 100]}
+    component="div"
+    count={items.length}
+    rowsPerPage={rowsPerPage}
+    page={page}
+    onPageChange={handleChangePage}
+    onRowsPerPageChange={handleChangeRowsPerPage}
+  />
+  </Paper>
+  );
+}

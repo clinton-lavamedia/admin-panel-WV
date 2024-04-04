@@ -15,11 +15,15 @@ import Button from '@mui/material/Button';
 import Router, { useRouter } from 'next/router';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import Image from 'next/image'
+import Typography from '@mui/material/Typography';
+import Logo from '../public/logo.png'
+
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
-//const BASE_URL = 'https://192.168.1.104/'
-const BASE_URL = 'https://ec2-13-126-83-192.ap-south-1.compute.amazonaws.com/'
+const BASE_URL = process.env.NEXT_PUBLIC_BASEURL
+//const BASE_URL = 'https://ec2-13-126-83-192.ap-south-1.compute.amazonaws.com/'
 
 export default function Login() {
   const router = useRouter();
@@ -35,7 +39,7 @@ export default function Login() {
   };
  function handleLogin(){
   let payload={email:email,password:password}
-  fetch(BASE_URL + 'public/login-admin-user-verification', {
+  fetch(BASE_URL + '/login-admin-user-verification', {
     method: 'POST',
     mode: 'cors',
     headers: {
@@ -48,14 +52,14 @@ export default function Login() {
     console.log(result)
     console.log(result.data)
     if(result.data.length>0){
-      router.push("/verification");
+      router.push("/landing");
       localStorage.setItem('token',email)
     }else{
       setOpen(true);
     }
    
   }, (error) => {
-    console.log(result)
+    console.log(error)
     setOpen(true);
    
   })
@@ -79,6 +83,13 @@ const handleClose = (event, reason) => {
       maxWidth: '100%',
     }}>
       <div style={{ alignContent:'center', alignItems:'center', display:'flex', flexDirection:'column'}}>
+      <Typography gutterBottom textAlign={'center'}>
+<Image src={Logo} width='300px' height='200px' alt='logo'/> 
+           
+      </Typography>
+      <Typography variant="h3" gutterBottom textAlign={'center'}>
+Sign in as a HEYO! admin          
+      </Typography>
       <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
         <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
           Invalid credentials
@@ -116,7 +127,7 @@ const handleClose = (event, reason) => {
           />
 
         </FormControl>
-       <Button variant="contained" color="success"  onClick={handleLogin}
+       <Button variant="contained" color="info"  onClick={handleLogin}
        >Heyo! admin</Button>
 
       </div>

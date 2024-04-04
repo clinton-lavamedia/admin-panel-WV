@@ -48,8 +48,9 @@ import Router, { useRouter } from 'next/router';
     protein: PropTypes.number.isRequired,
   }).isRequired,
 }; */
+const BASE_URL = process.env.NEXT_PUBLIC_BASEURL
 
-const BASE_URL = 'https://ec2-13-126-83-192.ap-south-1.compute.amazonaws.com/'
+//const BASE_URL = 'https://ec2-13-126-83-192.ap-south-1.compute.amazonaws.com/'
 //const BASE_URL = 'http://192.168.1.104/'
 export default function Verification(props) {
   const [error, setError] = React.useState(null);
@@ -97,7 +98,7 @@ export default function Verification(props) {
     //setApproval(option);
   };
   function handleApprove(payload) {
-    fetch(BASE_URL + 'public/admin-update-user-verification', {
+    fetch(BASE_URL + '/admin-update-user-verification', {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -135,10 +136,7 @@ export default function Verification(props) {
     setItems(items)
     setRerender(!rerender)
   }
-  function handleLogout(){
-    localStorage.removeItem("token")
-    router.push("/");
-  }
+ 
   function Row(row) {
     console.log(row)
     row = row.row
@@ -269,7 +267,7 @@ export default function Verification(props) {
   }
  
   React.useEffect(() => {
-    fetch(BASE_URL + "public/admin-get-user-verification")
+    fetch(BASE_URL + "/admin-get-user-verification")
       .then(res => res.json())
       .then(
         (result) => {
@@ -324,39 +322,7 @@ export default function Verification(props) {
   // console.log(rows)
   return (
     <div>
-      <Box sx={{ flexGrow: 1 }}>
-
-        <AppBar position="static" style={{ backgroundColor: '#fff' }}>
-          <Container maxWidth="xl">
-            <Toolbar disableGutters >
-              <Typography
-                variant="h6"
-                noWrap
-                component="a"
-                href="#app-bar-with-responsive-menu"
-                sx={{
-                  mr: 2,
-                  //display: { xs: 'none', md: 'flex' },
-                  // fontFamily: 'monospace',
-                  fontWeight: 700,
-                  // letterSpacing: '.3rem',
-                  color: 'black',
-                  textDecoration: 'none',
-                }}
-              >
-                HEYO!
-              </Typography>
-              <Typography variant="h6" color='black' component="div" sx={{ flexGrow: 1 }}>
-                User Verification Portal
-              </Typography>
-              <Button variant="contained" color='error'  onClick={handleLogout}>
-                Logout
-              </Button>
-
-            </Toolbar>
-          </Container>
-        </AppBar>
-      </Box>
+    
       <div>
         {isLoaded &&
 

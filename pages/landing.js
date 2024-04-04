@@ -1,0 +1,330 @@
+import * as React from 'react';
+import { styled, useTheme } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import MuiDrawer from '@mui/material/Drawer';
+import MuiAppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import List from '@mui/material/List';
+import CssBaseline from '@mui/material/CssBaseline';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import InboxIcon from '@mui/icons-material/MoveToInbox';
+import MailIcon from '@mui/icons-material/Mail';
+import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from 'recharts';
+import {Sunburst} from 'react-vis';
+import Avatar from '@mui/material/Avatar';
+import Router, { useRouter } from 'next/router';
+
+import Verification from './verification';
+import SeededUsers from './seededusers';
+import SuperUsers from './superusers';
+import Interests from './interests';
+import DemoUsers from './demousers';
+import Chat from './chat';
+import BroadcastChat from './bchat';
+import Button from '@mui/material/Button';
+import HowToRegOutlinedIcon from '@mui/icons-material/HowToRegOutlined';
+import RecentActorsOutlinedIcon from '@mui/icons-material/RecentActorsOutlined';
+import SettingsAccessibilityOutlinedIcon from '@mui/icons-material/SettingsAccessibilityOutlined';
+import InterestsOutlinedIcon from '@mui/icons-material/InterestsOutlined';
+import ThreePOutlinedIcon from '@mui/icons-material/ThreePOutlined';
+import SpeakerNotesOutlinedIcon from '@mui/icons-material/SpeakerNotesOutlined';
+import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
+import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import Logo from '../public/logo.png'
+import Image from 'next/image'
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASEURL
+
+const drawerWidth = 240;
+
+const openedMixin = (theme) => ({
+    width: drawerWidth,
+    transition: theme.transitions.create('width', {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.enteringScreen,
+    }),
+    overflowX: 'hidden',
+});
+
+const closedMixin = (theme) => ({
+    transition: theme.transitions.create('width', {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
+    }),
+    overflowX: 'hidden',
+    width: `calc(${theme.spacing(7)} + 1px)`,
+    [theme.breakpoints.up('sm')]: {
+        width: `calc(${theme.spacing(8)} + 1px)`,
+    },
+});
+
+const DrawerHeader = styled('div')(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    padding: theme.spacing(0, 1),
+    // necessary for content to be below app bar
+    ...theme.mixins.toolbar,
+}));
+
+const AppBar = styled(MuiAppBar, {
+    shouldForwardProp: (prop) => prop !== 'open',
+})(({ theme, open }) => ({
+    zIndex: theme.zIndex.drawer + 1,
+    transition: theme.transitions.create(['width', 'margin'], {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
+    }),
+    ...(open && {
+        marginLeft: drawerWidth,
+        width: `calc(100% - ${drawerWidth}px)`,
+        transition: theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+        }),
+    }),
+}));
+
+const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
+    ({ theme, open }) => ({
+        width: drawerWidth,
+        flexShrink: 0,
+        whiteSpace: 'nowrap',
+        boxSizing: 'border-box',
+        ...(open && {
+            ...openedMixin(theme),
+            '& .MuiDrawer-paper': openedMixin(theme),
+        }),
+        ...(!open && {
+            ...closedMixin(theme),
+            '& .MuiDrawer-paper': closedMixin(theme),
+        }),
+    }),
+);
+
+export default function Landing() {
+    const router = useRouter();
+
+    const theme = useTheme();
+    const [open, setOpen] = React.useState(false);
+    const [user, setUser] = React.useState('');
+    const [page, setPage] = React.useState('');
+    const [isLoaded, setIsLoaded] = React.useState(false);
+    const [items, setItems] = React.useState([]);
+    const [refresh, setRefresh] = React.useState(false);
+
+    React.useEffect(() => {
+        const token = localStorage.getItem("token");
+        console.log('token', token)
+        setUser(token)
+    }, []);
+    React.useEffect(() => {
+        fetch(BASE_URL + "/admin-stats")
+          .then(res => res.json())
+          .then(
+            (result) => {
+              console.log(result)
+              setIsLoaded(true);
+              let data = result.data;
+             let pie=[]
+              for (let key in data) {
+                             
+              //  data[key].value= data[key].count
+               // data[key].name= data[key].subtopic
+                pie.push({
+                    title:Number(data[key].count),
+                    size: data[key].subtopic
+                })
+              }
+              console.log(pie,data)
+              setItems({title:'Interests',children:pie});
+            },
+            // Note: it's important to handle errors here
+            // instead of a catch() block so that we don't swallow
+            // exceptions from actual bugs in components.
+            (error) => {
+              setIsLoaded(true);
+            //  setError(error);
+            }
+          )
+      }, [refresh])
+    const handleDrawerOpen = () => {
+        setOpen(true);
+    };
+
+    const handleDrawerClose = () => {
+        setOpen(false);
+    };
+    const handleListItemClick = (event, text) => {
+        console.log(event, text)
+        setPage(text)
+        // setSelectedIndex(index);
+    };
+    function handleLogout() {
+        localStorage.removeItem("token")
+        router.push("/");
+    }
+    const darkTheme = createTheme({
+        palette: {
+          mode: 'dark',
+          primary: {
+            main: '#1976d2',
+          },
+        },
+      });
+      const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+    return (
+        <Box sx={{ display: 'flex' }}>
+            <CssBaseline />
+            <ThemeProvider theme={darkTheme}>
+            <AppBar position="fixed" open={open} /* color='transparent' */>
+                <Toolbar >
+                    <IconButton
+                        color="inherit"
+                        aria-label="open drawer"
+                        onClick={handleDrawerOpen}
+                        edge="start"
+                        sx={{
+                            marginRight: 5,
+                            ...(open && { display: 'none' }),
+                        }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+
+                    <Typography variant="h5" noWrap component="div" sx={{ flexGrow: 1 }}>
+                        HEYO admin portal 
+                        <Typography variant="caption" noWrap component="div" sx={{ flexGrow: 1 }}>
+                        {user}
+                    </Typography>
+                    </Typography>
+                    
+                    <Button variant="contained" color='error' onClick={handleLogout}>
+                        Logout
+                    </Button>
+                </Toolbar>
+            </AppBar>
+            </ThemeProvider>
+            <ThemeProvider theme={darkTheme}>
+            <Drawer variant="permanent" open={open}>
+                <DrawerHeader>
+                    <IconButton onClick={handleDrawerClose}>
+                        {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+                    </IconButton>
+                </DrawerHeader>
+                <Divider />
+                <List>
+                    {['Verification', 'Seeded Users', 'Cool Profiles','Super Users', 'Interests'].map((text, index) => (
+                        <ListItem key={text} disablePadding sx={{ display: 'block' }}>
+                            <ListItemButton
+                                sx={{
+                                    minHeight: 48,
+                                    justifyContent: open ? 'initial' : 'center',
+                                    px: 2.5,
+                                }}
+                                onClick={(event) => handleListItemClick(event, text)}
+                            >
+                                <ListItemIcon
+                                    sx={{
+                                        minWidth: 0,
+                                        mr: open ? 3 : 'auto',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    {index ==0 &&  <HowToRegOutlinedIcon /> }
+                                    {index ==1 &&  <RecentActorsOutlinedIcon /> }
+                                    {index ==2 &&  <SettingsAccessibilityOutlinedIcon /> }
+                                    {index ==3 &&  <AdminPanelSettingsOutlinedIcon /> }
+                                    {index ==4 &&  <InterestsOutlinedIcon /> }
+
+                                </ListItemIcon>
+                                <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
+                            </ListItemButton>
+                        </ListItem>
+                    ))}
+                </List>
+                <Divider />
+                <List>
+                    {['Chat - Seeded <> Real', 'Broadcast Chat', 'Push Notification'].map((text, index) => (
+                        <ListItem key={text} disablePadding sx={{ display: 'block' }}>
+                            <ListItemButton
+                                sx={{
+                                    minHeight: 48,
+                                    justifyContent: open ? 'initial' : 'center',
+                                    px: 2.5,
+                                }}
+                                onClick={(event) => handleListItemClick(event, text)}
+
+                            >
+                                <ListItemIcon
+                                    sx={{
+                                        minWidth: 0,
+                                        mr: open ? 3 : 'auto',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    {index ==0 &&  <ThreePOutlinedIcon /> }
+                                    {index ==1 &&  <SpeakerNotesOutlinedIcon /> }
+                                    {index ==2 &&  <CampaignOutlinedIcon /> }
+                                </ListItemIcon>
+                                <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
+                            </ListItemButton>
+                        </ListItem>
+                    ))}
+                </List>
+            </Drawer>
+            </ThemeProvider>
+            
+            <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+                <DrawerHeader />
+
+                {page == 'Verification' && <Verification />}
+                {page == 'Seeded Users' && <SeededUsers />}
+                {page == 'Super Users' && <SuperUsers />}
+                {page == 'Interests' && <Interests />}
+                {page == 'Cool Profiles' && <DemoUsers />}
+                {page == 'Chat - Seeded <> Real' && <Chat />}
+                {page == 'Broadcast Chat' &&<BroadcastChat/>}
+                {page == '' && 
+                
+                <div>
+                    {/*  <PieChart width={400} height={400}>
+          <Pie data={items} id="test" dataKey="value" cx="50%" cy="50%" outerRadius={60}    
+         // innerRadius={40}       
+          paddingAngle={5}
+ isAnimationActive={true} fill="#8884d8" label>
+        
+            </Pie>
+        </PieChart> */}
+            
+
+
+<Typography gutterBottom textAlign={'center'}>
+<Image src={Logo} width='300px' height='200px' alt='logo'/> 
+           
+      </Typography>
+      <Typography variant="h3" gutterBottom textAlign={'center'}>
+Welcome (:           
+      </Typography>
+{/* <Sunburst
+  hideRootNode
+  colorType="literal"
+  data={items}
+  height={300}
+  width={350}/> */}
+                    </div>}
+            </Box>
+        </Box>
+    );
+}
