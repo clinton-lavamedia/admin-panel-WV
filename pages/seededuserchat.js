@@ -103,7 +103,7 @@ function Chat() {
 
                     setItems(merged_data.data);
                     setUIDs(data[0].real_user_id)
-                    let UID = data[0].seeded_user_id.toString();
+                    let UID = 'heyo_user' //data[0].seeded_user_id.toString();
                     console.log(UID)
                     CometChat.getUser(UID).then(
                         user => {
@@ -131,20 +131,24 @@ function Chat() {
                                         })
                                         .catch((error) => { }, console.log);
                                 } else {
+
                                     console.log("Already logged-in", { user });
                                     setUser(user);
+                                    setIsLoaded(true);
                                 }
                             });
                         })
                         .catch((e) => {
                             console.log(e);
+                            setUser(undefined)
+                            
                         });
                 },
                 // Note: it's important to handle errors here
                 // instead of a catch() block so that we don't swallow
                 // exceptions from actual bugs in components.
                 (error) => {
-                    setIsLoaded(true);
+                   // setIsLoaded(true);
                     //setError(error);
                 }
             )
@@ -204,7 +208,7 @@ function Chat() {
                                         setUser(user);
                                         let usersRequest = new CometChat.UsersRequestBuilder()
                                             .setLimit(limit)
-                                            .setUIDs(uids)
+                                           // .setUIDs([uids])
                                             // .setTags(tags)
                                             //.setStatus(CometChat.USER_STATUS.ONLINE)
                                             // .friendsOnly(true)
@@ -218,7 +222,13 @@ function Chat() {
                                             usersRequestBuilder: usersRequest
                                         });
                                     })
-                                    .catch((error) => { }, console.log);
+                                    .catch((error)=> {
+                                        console.log('error',error);
+                                        alert('User not created in cometchat')
+                                        setUser(undefined)
+                                        setRefresh(!refresh)
+                                       
+                                    });
                             } else {
                                 console.log("Already logged-in", { user });
                                 setUser(user);
@@ -226,7 +236,11 @@ function Chat() {
                         });
                     })
                     .catch((e) => {
-                        console.log(e);
+                        console.log('error',e);
+                        alert('User not created in cometchat')
+                        setUser(undefined)
+                        setRefresh(!refresh)
+                       
                     });
             }, error => {
                 console.log("Logout failed with exception:", { error });

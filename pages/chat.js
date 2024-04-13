@@ -6,9 +6,17 @@ const CometChatNoSSR = dynamic(() => import("./seededuserchat"), {
 });
 
 function Chat() {
-  useEffect(() => {
+ /*  useEffect(() => {
     window.CometChat = require("@cometchat/chat-sdk-javascript").CometChat;
-  });
+    
+  }); */
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.CometChat = require("@cometchat/chat-sdk-javascript").CometChat;
+
+    }
+  },[] );
 
   return (
     <div>

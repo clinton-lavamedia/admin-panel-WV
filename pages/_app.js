@@ -16,9 +16,9 @@ export default function MyApp(props) {
   return (
     <CacheProvider value={emotionCache}>
       <Head>
-      <script type="text/javascript" 
+     {/*  <script type="text/javascript" 
         src="https://unpkg.com/@cometchat/chat-sdk-javascript@latest/CometChat.js">
-</script>
+</script> */}
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </Head>
       <ThemeProvider theme={theme}>

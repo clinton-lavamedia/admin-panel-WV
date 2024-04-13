@@ -6,10 +6,16 @@ const CometChatNoSSR = dynamic(() => import("./broadcastchat"), {
 });
 
 function BroadcastChat() {
-  useEffect(() => {
+  /* useEffect(() => {
     window.CometChat = require("@cometchat/chat-sdk-javascript").CometChat;
-  });
+    
+  }); */
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.CometChat = require("@cometchat/chat-sdk-javascript").CometChat;
 
+    }
+  },[] );
   return (
     <div>
       <CometChatNoSSR />

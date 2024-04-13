@@ -34,7 +34,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
   });
 const BASE_URL = process.env.NEXT_PUBLIC_BASEURL
-let UID = "001";
+let UID = "heyo_user";
 function BroadcastChat() {
     const [user, setUser] = React.useState(undefined);
     const [isLoaded, setIsLoaded] = React.useState(false);
@@ -183,12 +183,12 @@ function BroadcastChat() {
                 accept: 'application/json',
                 onBehalfOf: UID.toString(),
                 'content-type': 'application/json',
-                apikey: 'd9325eed41090b8083828cbf783f5dd48e856d70'
+                apikey: 'b6b82b4b0434b97f248cd93ef817b94b76758ea7'
             },
             body: JSON.stringify({ category: 'message', type: 'text', data: { text: message }, multipleReceivers: { uids: selected } })
         };
         console.log(options)
-        fetch('https://2521991efaed9850.api-in.cometchat.io/v3/messages', options)
+        fetch('https://2404783e5909fb6f.api-us.cometchat.io/v3/messages', options)
             .then(response => response.json())
             .then(response => {
                 console.log(response)

@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@cometchat/chat-sdk-javascript": "^4.0.3",
-    "@cometchat/chat-uikit-react": "^4.2.3",
+    "@cometchat/chat-uikit-react": "^4.3.4",
     "@cometchat/uikit-elements": "^4.2.1",
     "@cometchat/uikit-resources": "^4.2.2",
     "@cometchat/uikit-shared": "^4.2.2",
