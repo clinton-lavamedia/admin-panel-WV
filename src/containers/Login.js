@@ -31,6 +31,14 @@ export default function Login() {
   const [password, setPassword] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [open, setOpen] = React.useState(false);
+  const [isUserAuthenticated, setIsUserAuthenticated] = React.useState(false)
+  React.useEffect(() => {
+    const token = localStorage.getItem("token");
+    console.log('token', token)
+   
+    setIsUserAuthenticated(!!token)
+    console.log(!!token)
+  }, []);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -74,9 +82,16 @@ export default function Login() {
     setOpen(false);
   };
   return (
+  
     <Box sx={{
       width: 500,
       maxWidth: '100%',
+      alignContent: 'center',
+      alignItems: 'center',
+      display: 'flex',
+      flexDirection: 'column',
+      marginTop: '100px',
+      marginLeft:'30%'
     }}>
       <div style={{ alignContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column' }}>
         <Typography gutterBottom textAlign={'center'}>
@@ -122,5 +137,7 @@ export default function Login() {
         <Button variant="contained" color="info" onClick={handleLogin}>Heyo! admin</Button>
       </div>
     </Box>
+          
   );
+
 }

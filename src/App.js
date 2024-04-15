@@ -1,4 +1,4 @@
-import { BrowserRouter as Router } from 'react-router-dom'; // Added import for BrowserRouter
+import { BrowserRouter as Router, Route, Routes ,useNavigate} from 'react-router-dom'; // Added import for BrowserRouter, Route, and Routes
 
 import * as React from 'react';
 import Container from '@mui/material/Container';
@@ -24,19 +24,25 @@ export default function Index() {
       token,
     });
     setIsUserAuthenticated(!!token)
+    console.log(!!token)
   }, []);
-
   return (
-    <Router> {/* Replaced Container with Router */}
+    <Router>
+      <Routes>
+        <Route path="/landing" element={<Landing />} />
+        <Route path="/" element={<Login />} />  {/* Added route for /landing redirecting to Landing.js */}
+      </Routes>
       <Container >
-        <Box sx={{ my: 4 }}>
+       {/*  <Box sx={{ my: 4 }}>
           {!isUserAuthenticated ?
             <Login />
             :
-            <Landing />
+            ''
           }
-        </Box>
+        </Box> */}
       </Container>
     </Router>
   );
 }
+
+
