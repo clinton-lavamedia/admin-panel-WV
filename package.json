@@ -9,6 +9,7 @@
     "eject": "react-scripts eject"
   },
   "dependencies": {
+    "@cometchat/calls-sdk-javascript": "^4.0.7",
     "@cometchat/chat-uikit-react": "^4.3.4",
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
