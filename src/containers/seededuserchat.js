@@ -10,7 +10,10 @@ import {
     WithMessagesStyle
 } from "@cometchat/uikit-shared";
 import { CometChat } from "@cometchat/chat-sdk-javascript";
-
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Modal from '@mui/material/Modal';
 import * as React from 'react';
 import consts from "./consts";
 import List from '@mui/material/List';
@@ -20,6 +23,13 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Checkbox from '@mui/material/Checkbox';
 import Avatar from '@mui/material/Avatar';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TablePagination from '@mui/material/TablePagination';
 const BASE_URL = process.env.REACT_APP_BASEURL
 
 function Chat() {
@@ -28,6 +38,8 @@ function Chat() {
     const [refresh, setRefresh] = React.useState(false);
     const [items, setItems] = React.useState([]);
     const [UIDs, setUIDs] = React.useState([]);
+    const [isRequestOpen, setIsRequestOpen] = React.useState(false);
+    const [requestedProfiles, setRequests] = React.useState([]);
 
     const UIKitSettings = new UIKitSettingsBuilder()
         .setAppId(consts.APP_ID)
@@ -143,14 +155,14 @@ function Chat() {
                         .catch((e) => {
                             console.log(e);
                             setUser(undefined)
-                            
+
                         });
                 },
                 // Note: it's important to handle errors here
                 // instead of a catch() block so that we don't swallow
                 // exceptions from actual bugs in components.
                 (error) => {
-                   // setIsLoaded(true);
+                    // setIsLoaded(true);
                     //setError(error);
                 }
             )
@@ -162,7 +174,7 @@ function Chat() {
             <div>
 
                 <span style={{ color: "#347fb9", font: "400 11px Inter, sans-serif" }}>
-                    {user.uid} | {user.status} {user.lastActiveAt} |  {user.tags} | 
+                    {user.uid} | {user.status} {user.lastActiveAt} |  {user.tags} |
                 </span>
                 {/*  <br/>
            <span style={{ color: "#347fb9", font: "400 11px Inter, sans-serif" }}>
@@ -210,7 +222,7 @@ function Chat() {
                                         setUser(user);
                                         let usersRequest = new CometChat.UsersRequestBuilder()
                                             .setLimit(limit)
-                                           // .setUIDs([uids])
+                                            // .setUIDs([uids])
                                             // .setTags(tags)
                                             //.setStatus(CometChat.USER_STATUS.ONLINE)
                                             // .friendsOnly(true)
@@ -224,12 +236,12 @@ function Chat() {
                                             usersRequestBuilder: usersRequest
                                         });
                                     })
-                                    .catch((error)=> {
-                                        console.log('error',error);
+                                    .catch((error) => {
+                                        console.log('error', error);
                                         alert('User not created in cometchat')
                                         setUser(undefined)
                                         setRefresh(!refresh)
-                                       
+
                                     });
                             } else {
                                 console.log("Already logged-in", { user });
@@ -238,11 +250,11 @@ function Chat() {
                         });
                     })
                     .catch((e) => {
-                        console.log('error',e);
+                        console.log('error', e);
                         alert('User not created in cometchat')
                         setUser(undefined)
                         setRefresh(!refresh)
-                       
+
                     });
             }, error => {
                 console.log("Logout failed with exception:", { error });
@@ -273,13 +285,117 @@ function Chat() {
         width: '80%',
         height: "95vh"
     }
-
+    const style = {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        bgcolor: 'background.paper',
+        border: '2px solid #000',
+        boxShadow: 24,
+        p: 4,
+      };
+    const handleOpenRequests = () => {
+        console.log('checking requests')
+        fetch(BASE_URL + "/admin-seeded-friend-request")
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data.data)
+                    setRequests(data.data);
+                    setIsRequestOpen(true);
+                })
+                .catch(error => {
+                    console.error('Error fetching friend requests:', error);
+                });
+    };
+    const handleAcceptProfile = (seededUserId, realUserId) => {
+        fetch(BASE_URL + "/admin-accept-request", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                source: seededUserId,
+                target: realUserId,
+                seeded: true
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            setIsRequestOpen(false)
+            alert('Request accepted')
+            console.log('Request accepted successfully:', data);
+            // Additional logic if needed after accepting the request
+        })
+        .catch(error => {
+            setIsRequestOpen(false)
+            alert('Error accepting request')
+            console.error('Error accepting request:', error);
+        });
+    };
+    const handleRejectProfile = (seededUserId, realUserId) => {
+        fetch(BASE_URL + "/admin-reject-request", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                source: seededUserId,
+                target: realUserId,
+                seeded:true
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            setIsRequestOpen(false)
+            console.log('Request rejected successfully:', data);
+            alert('Request rejected success')
+            // Additional logic if needed after rejecting the request
+        })
+        .catch(error => {
+            setIsRequestOpen(false)
+            alert('Error rejecting request')
+            console.error('Error rejecting request:', error);
+        });
+    };
     return user ? (
 
         <div style={{ width: "95vw", height: "95vh" }}>
             <div>
-                Logged in as: {user.name + ' - User ID: ' + user.uid}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                    <div>Logged in as: {user.name + ' - User ID: ' + user.uid}</div>
+                    <Button variant="contained" color="primary" onClick={handleOpenRequests}>View Requests</Button>
+                </div>
             </div>
+            {isRequestOpen && (
+                <Modal open={isRequestOpen} onClose={() => setIsRequestOpen(false)}>
+                    <Box sx={style}>
+                        <Table>
+                            <TableBody>
+                                {requestedProfiles.map((item) => (
+                                    <TableRow key={item.id}>
+                                        <TableCell>
+                                            <Avatar alt={item.seeded_first_name} src={item.seeded_user_image_urls[0]} />
+                                            {item.seeded_first_name + ' ' + item.seeded_last_name}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Avatar alt={item.real_first_name} src={item.real_user_image_urls[0]} />
+                                            {item.real_first_name + ' ' + item.real_last_name}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button variant="outlined" color="primary" size="small" style={{ marginRight: '10px' }} onClick={() => handleAcceptProfile(item.seeded_user_id, item.real_user_id)}>Accept</Button>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button variant="outlined" color="secondary" size="small" onClick={() => handleRejectProfile(item.seeded_user_id, item.real_user_id)}>Reject</Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </Box>
+                </Modal>
+            )}
             <div style={splitScreen}>
                 <div style={topPane}>
                     <List dense sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
@@ -300,7 +416,7 @@ function Chat() {
                                     <ListItemButton
                                         onClick={() => {
                                             getChats(value.seeded_user_id, value.real_user_id)
-                                           // alert(value.seeded_user_id);
+                                            // alert(value.seeded_user_id);
                                         }}
                                     >
                                         <ListItemAvatar>
@@ -331,13 +447,13 @@ function Chat() {
                                 showSectionHeader: false,
                                 usersStyle: uStyle,
                                 subtitleView: getSubtitleView,
-                                 usersRequestBuilder: new CometChat.UsersRequestBuilder()
-                                 .setLimit(limit)
-                                 .setUIDs(UIDs)
-                                 // .setTags(tags)
-                                 //.setStatus(CometChat.USER_STATUS.ONLINE)
-                                 // .friendsOnly(true)
-                                 .withTags(true)
+                                usersRequestBuilder: new CometChat.UsersRequestBuilder()
+                                    .setLimit(limit)
+                                    .setUIDs(UIDs)
+                                    // .setTags(tags)
+                                    //.setStatus(CometChat.USER_STATUS.ONLINE)
+                                    // .friendsOnly(true)
+                                    .withTags(true)
                             })}
                         // messagesConfiguration={mConfig}
                         // usersWithMessagesStyle={uwmStyle}
