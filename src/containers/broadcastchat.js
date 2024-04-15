@@ -33,8 +33,8 @@ import { DataGrid } from '@mui/x-data-grid';
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
   });
-const BASE_URL = process.env.NEXT_PUBLIC_BASEURL
-let UID = "heyo_user";
+  const BASE_URL = process.env.REACT_APP_BASEURL
+  let UID = "heyo_user";
 function BroadcastChat() {
     const [user, setUser] = React.useState(undefined);
     const [isLoaded, setIsLoaded] = React.useState(false);
@@ -70,22 +70,7 @@ function BroadcastChat() {
     const handleClick = (event, id) => {
         console.log(event, id)
         setSelected(event)
-        /*  const selectedIndex = selected.indexOf(id);
-         let newSelected = [];
- 
-         if (selectedIndex === -1) {
-             newSelected = newSelected.concat(selected, id);
-         } else if (selectedIndex === 0) {
-             newSelected = newSelected.concat(selected.slice(1));
-         } else if (selectedIndex === selected.length - 1) {
-             newSelected = newSelected.concat(selected.slice(0, -1));
-         } else if (selectedIndex > 0) {
-             newSelected = newSelected.concat(
-                 selected.slice(0, selectedIndex),
-                 selected.slice(selectedIndex + 1),
-             );
-         }
-         setSelected(newSelected); */
+        
     };
 
     const UIKitSettings = new UIKitSettingsBuilder()
@@ -96,14 +81,14 @@ function BroadcastChat() {
         .build();
     React.useEffect(() => {
 
-        CometChat.getUser(UID).then(
+       /*  CometChat.getUser(UID).then(
             user => {
                 console.log("User details fetched for user:", user);
                 setUser(user);
             }, error => {
                 console.log("User details fetching failed with error:", error);
             }
-        );
+        ); */
 
 
         CometChatUIKit.init(UIKitSettings)

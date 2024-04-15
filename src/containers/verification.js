@@ -28,35 +28,13 @@ import Button from '@mui/material/Button';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Container from '@mui/material/Container';
-import Router, { useRouter } from 'next/router';
 
+const BASE_URL = process.env.REACT_APP_BASEURL
 
-/* Row.propTypes = {
-  row: PropTypes.shape({
-    calories: PropTypes.number.isRequired,
-    carbs: PropTypes.number.isRequired,
-    fat: PropTypes.number.isRequired,
-    history: PropTypes.arrayOf(
-      PropTypes.shape({
-        amount: PropTypes.number.isRequired,
-        customerId: PropTypes.string.isRequired,
-        date: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-    name: PropTypes.string.isRequired,
-    price: PropTypes.number.isRequired,
-    protein: PropTypes.number.isRequired,
-  }).isRequired,
-}; */
-const BASE_URL = process.env.NEXT_PUBLIC_BASEURL
-
-//const BASE_URL = 'https://ec2-13-126-83-192.ap-south-1.compute.amazonaws.com/'
-//const BASE_URL = 'http://192.168.1.104/'
 export default function Verification(props) {
   const [error, setError] = React.useState(null);
   const [isLoaded, setIsLoaded] = React.useState(false);
   const [items, setItems] = React.useState([]);
-  //const { row } = items;
   const [open, setOpen] = React.useState(false);
   const [approve, setApproval] = React.useState('reject');
   const [refresh, setRefresh] = React.useState(false);
@@ -64,7 +42,6 @@ export default function Verification(props) {
   const [payload, setPayload] = React.useState({});
   const [notes, setNotes] = React.useState('');
   const [rerender, setRerender] = React.useState(false);
-  const router = useRouter();
 
   const handleClose = () => {
     setOpenReject(false);
@@ -140,10 +117,9 @@ export default function Verification(props) {
   function Row(row) {
     console.log(row)
     row = row.row
-    //#d79a84
     return (
       <React.Fragment>
-        <TableRow sx={{ '& > *': { borderBottom: 'unset', /* backgroundColor: (row.attempts = 0 ? '#c8ebf4' : '#84c6d7') */ } }} >
+        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} >
           <TableCell>
             <IconButton
               aria-label="expand row"
@@ -158,7 +134,7 @@ export default function Verification(props) {
           </TableCell>
           <TableCell align="center">{row.first_name + ' '+ row.last_name}</TableCell>
           <TableCell align="center">{row.attempts}</TableCell>
-          <TableCell align="center">{/* {row.img_url} */}
+          <TableCell align="center">
             <Avatar alt="id_img"
               variant="square"
               sx={{ width: 56, height: 56 }}
@@ -172,7 +148,6 @@ export default function Verification(props) {
               size="small"
               value={row?.logs?.length < 1 ? 'null' : (row.verified ? 'approve' : 'reject')}
               exclusive
-              // onChange={handleChange/* (row) */}
               onChange={(event) => handleChange(event, row)}
               aria-label="approval"
             >
@@ -182,7 +157,7 @@ export default function Verification(props) {
           </TableCell>
 
         </TableRow>
-        <TableRow sx={{ '& > *': { border: 0, /* backgroundColor: (row.attempts = 0 ? '#c8ebf4' : '#84c6d7') */ } }} >
+        <TableRow sx={{ '& > *': { border: 0 } }} >
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={12}>
             <Collapse in={row.open} timeout="auto" unmountOnExit>
               <Box sx={{ margin: 1 }} align='center'>
@@ -198,7 +173,6 @@ export default function Verification(props) {
                   Profile images
                 </Typography>
                 <ImageList
-                  // sx={{ width: 500, height: 450 }}
                   variant="quilted"
                   cols={4}
                   rowHeight={300}
@@ -297,29 +271,17 @@ export default function Verification(props) {
             data[key].image_data = uniqueImages
 
             data[key].open = false
-            /*  let logs=JSON.stringify(data[key].logs)
-             console.log(logs)
-             for (let info in logs) {
-               console.log(logs[info])
-               logs[info]=JSON.parse(logs[info])
-             } */
-            // data[key].logs=JSON.parse(data[key].logs)
             delete data[key].image_urls
             console.log(data)
-            // data.delete( data[key].image_urls)
           }
           setItems(data);
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
         (error) => {
           setIsLoaded(true);
           setError(error);
         }
       )
   }, [refresh])
-  // console.log(rows)
   return (
     <div>
     
@@ -357,12 +319,9 @@ export default function Verification(props) {
                 </DialogContentText>
 
                 <TextField
-                  //  autoFocus
                   fullWidth
                   htmlFor="notes"
                   label="notes"
-                  //  placeholder="add your notes"
-                  // variant="standard"
                   rows={4}
                   multiline
                   onChange={(event) => {

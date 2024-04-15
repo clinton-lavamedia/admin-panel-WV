@@ -17,16 +17,14 @@ import Avatar from '@mui/material/Avatar';
 import Paper from '@mui/material/Paper';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import Router, { useRouter } from 'next/router';
 import Typography from '@mui/material/Typography';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASEURL
+const BASE_URL = process.env.REACT_APP_BASEURL
 
 export default function SeededUsers() {
   const [error, setError] = React.useState(null);
   const [isLoaded, setIsLoaded] = React.useState(false);
   const [items, setItems] = React.useState([]);
-  //const { row } = items;
   const [open, setOpen] = React.useState(false);
   const [approve, setApproval] = React.useState('reject');
   const [refresh, setRefresh] = React.useState(false);
@@ -46,29 +44,6 @@ export default function SeededUsers() {
     setPage(0);
   };
 
-  const router = useRouter();
-  function createData(name, calories, fat, carbs, protein, price) {
-    return {
-      name,
-      calories,
-      fat,
-      carbs,
-      protein,
-      price,
-      history: [
-        {
-          date: '2020-01-05',
-          customerId: '11091700',
-          amount: 3,
-        },
-        {
-          date: '2020-01-02',
-          customerId: 'Anonymous',
-          amount: 1,
-        },
-      ],
-    };
-  }
   React.useEffect(() => {
     fetch(BASE_URL + "/admin-get-seeded-users")
       .then(res => res.json())
@@ -77,45 +52,11 @@ export default function SeededUsers() {
           setIsLoaded(true);
           let data = result.data.user;
           for (let key in data) {
-            /*  let image_data = []
-             let urls = data[key].image_urls
-             for (let images in urls) {
-               image_data.push({ img: urls[images] })
-             }
-             data[key].image_data = image_data
-             data[key].logs = data[key].logs.filter(function (val) { return val !== null; })//.join(", ")
-             const uniqueArray = data[key].logs.filter((value, index) => {
-               const _value = JSON.stringify(value);
-               return index === data[key].logs.findIndex(obj => {
-                 return JSON.stringify(obj) === _value;
-               });
-             });
-             const uniqueImages = data[key].image_data.filter((value, index) => {
-               const _value = JSON.stringify(value);
-               return index === data[key].image_data.findIndex(obj => {
-                 return JSON.stringify(obj) === _value;
-               });
-             });
-             data[key].logs = uniqueArray
-             data[key].image_data = uniqueImages
-  */
             data[key].open = false
-            /*  let logs=JSON.stringify(data[key].logs)
-             console.log(logs)
-             for (let info in logs) {
-               console.log(logs[info])
-               logs[info]=JSON.parse(logs[info])
-             } */
-            // data[key].logs=JSON.parse(data[key].logs)
-            //delete data[key].image_urls
             console.log(data)
-            // data.delete( data[key].image_urls)
           }
           setItems(data);
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
         (error) => {
           setIsLoaded(true);
           setError(error);
@@ -175,21 +116,11 @@ export default function SeededUsers() {
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
             <Collapse in={row.open} timeout="auto" unmountOnExit>
               <Box sx={{ margin: 1 }}>
-                {/*  <Typography variant="h6" gutterBottom component="div">
-              Additional information
-              </Typography> */}
                 <Table size="small" aria-label="purchases">
                   <TableHead>
-                    {/*  {row?.images?.map((row) => (
-            <TableRow key={row.id}> <Avatar alt="id_img"
-            variant="square"
-            //sx={{ width: 56, height: 56 }}
-            src={row.img_url} /> </TableRow> 
-          ))} */}
                     <TableRow >
 
                       <ImageList
-                        // sx={{ width: 500, height: 450 }}
                         variant="quilted"
                         cols={4}
                         rowHeight={200}
@@ -236,8 +167,8 @@ export default function SeededUsers() {
  <Typography variant="h3" gutterBottom textAlign={'center'}>
             Seeded users
       </Typography>
-      <TableContainer /* component={Paper}  */ sx={{ maxHeight: 600 }}>
-        <Table stickyHeader size="small" aria-label="collapsible table">
+      <TableContainer sx={{ maxHeight: 600 }}>
+        <Table stickyHeader size="small" aria-label="collapsible table" sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
               <TableCell />

@@ -9,6 +9,8 @@ import {
     MessageListStyle,
     WithMessagesStyle
 } from "@cometchat/uikit-shared";
+import { CometChat } from "@cometchat/chat-sdk-javascript";
+
 import * as React from 'react';
 import consts from "./consts";
 import List from '@mui/material/List';
@@ -18,7 +20,7 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Checkbox from '@mui/material/Checkbox';
 import Avatar from '@mui/material/Avatar';
-const BASE_URL = process.env.NEXT_PUBLIC_BASEURL
+const BASE_URL = process.env.REACT_APP_BASEURL
 
 function Chat() {
     const [user, setUser] = React.useState(undefined);
@@ -105,13 +107,13 @@ function Chat() {
                     setUIDs(data[0].real_user_id)
                     let UID = 'heyo_user' //data[0].seeded_user_id.toString();
                     console.log(UID)
-                    CometChat.getUser(UID).then(
+                    /* CometChat.getUser(UID).then(
                         user => {
                             console.log("User details fetched for user:", user);
                         }, error => {
                             console.log("User details fetching failed with error:", error);
                         }
-                    );
+                    ); */
                     const UIKitSettings = new UIKitSettingsBuilder()
                         .setAppId(consts.APP_ID)
                         .setRegion(consts.REGION)

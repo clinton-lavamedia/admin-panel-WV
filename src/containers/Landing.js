@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { styled, useTheme } from '@mui/material/styles';
+import React, { useState, useEffect } from 'react';
+import { styled, useTheme, createTheme, ThemeProvider } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import MuiAppBar from '@mui/material/AppBar';
@@ -16,18 +16,6 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
-import Avatar from '@mui/material/Avatar';
-import Router, { useRouter } from 'next/router';
-
-import Verification from './verification';
-import SeededUsers from './seededusers';
-import SuperUsers from './superusers';
-import Interests from './interests';
-import DemoUsers from './demousers';
-import Chat from './chat';
-import BroadcastChat from './bchat';
 import Button from '@mui/material/Button';
 import HowToRegOutlinedIcon from '@mui/icons-material/HowToRegOutlined';
 import RecentActorsOutlinedIcon from '@mui/icons-material/RecentActorsOutlined';
@@ -37,11 +25,16 @@ import ThreePOutlinedIcon from '@mui/icons-material/ThreePOutlined';
 import SpeakerNotesOutlinedIcon from '@mui/icons-material/SpeakerNotesOutlined';
 import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import Logo from '../public/logo.png'
-import Image from 'next/image'
+import Logo from '../logo.png'
+import DemoUsers from './demousers';
+import SeededUsers from './seededusers';
+import SuperUsers from './superusers';
+import Interests from './interests';
+import Verification from './verification';
+import BroadcastChat from './broadcastchat';
+import Chat from './seededuserchat';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASEURL
+const BASE_URL = process.env.REACT_APP_BASEURL;
 
 const drawerWidth = 240;
 
@@ -111,22 +104,20 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 );
 
 export default function Landing() {
-    const router = useRouter();
-
     const theme = useTheme();
-    const [open, setOpen] = React.useState(false);
-    const [user, setUser] = React.useState('');
-    const [page, setPage] = React.useState('');
-    const [isLoaded, setIsLoaded] = React.useState(false);
-    const [items, setItems] = React.useState([]);
-    const [refresh, setRefresh] = React.useState(false);
+    const [open, setOpen] = useState(false);
+    const [user, setUser] = useState('');
+    const [page, setPage] = useState('');
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [items, setItems] = useState([]);
+    const [refresh, setRefresh] = useState(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const token = localStorage.getItem("token");
         console.log('token', token)
         setUser(token)
     }, []);
-    React.useEffect(() => {
+    useEffect(() => {
         fetch(BASE_URL + "/admin-stats")
           .then(res => res.json())
           .then(
@@ -136,9 +127,6 @@ export default function Landing() {
               let data = result.data;
              let pie=[]
               for (let key in data) {
-                             
-              //  data[key].value= data[key].count
-               // data[key].name= data[key].subtopic
                 pie.push({
                     title:Number(data[key].count),
                     size: data[key].subtopic
@@ -147,12 +135,8 @@ export default function Landing() {
               console.log(pie,data)
               setItems({title:'Interests',children:pie});
             },
-            // Note: it's important to handle errors here
-            // instead of a catch() block so that we don't swallow
-            // exceptions from actual bugs in components.
             (error) => {
               setIsLoaded(true);
-            //  setError(error);
             }
           )
       }, [refresh])
@@ -166,11 +150,10 @@ export default function Landing() {
     const handleListItemClick = (event, text) => {
         console.log(event, text)
         setPage(text)
-        // setSelectedIndex(index);
     };
     function handleLogout() {
         localStorage.removeItem("token")
-        router.push("/");
+        window.location.href = "/";
     }
     const darkTheme = createTheme({
         palette: {
@@ -180,13 +163,12 @@ export default function Landing() {
           },
         },
       });
-      const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
     return (
         <Box sx={{ display: 'flex' }}>
             <CssBaseline />
             <ThemeProvider theme={darkTheme}>
-            <AppBar position="fixed" open={open} /* color='transparent' */>
+            <AppBar position="fixed" open={open}>
                 <Toolbar >
                     <IconButton
                         color="inherit"
@@ -284,8 +266,8 @@ export default function Landing() {
             </Drawer>
             </ThemeProvider>
             
-            <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-                <DrawerHeader />
+            <Box component="main" sx={{ display: 'flex', flexGrow: 1 ,p: 3,mt:5}}>
+               {/*  <DrawerHeader /> */}
 
                 {page == 'Verification' && <Verification />}
                 {page == 'Seeded Users' && <SeededUsers />}
@@ -296,32 +278,14 @@ export default function Landing() {
                 {page == 'Broadcast Chat' &&<BroadcastChat/>}
                 {page == '' && 
                 
-                <div>
-                    {/*  <PieChart width={400} height={400}>
-          <Pie data={items} id="test" dataKey="value" cx="50%" cy="50%" outerRadius={60}    
-         // innerRadius={40}       
-          paddingAngle={5}
- isAnimationActive={true} fill="#8884d8" label>
-        
-            </Pie>
-        </PieChart> */}
-            
-
-
-<Typography gutterBottom textAlign={'center'}>
-<Image src={Logo} width='300px' height='200px' alt='logo'/> 
-           
-      </Typography>
-      <Typography variant="h3" gutterBottom textAlign={'center'}>
-Welcome (:           
-      </Typography>
-{/* <Sunburst
-  hideRootNode
-  colorType="literal"
-  data={items}
-  height={300}
-  width={350}/> */}
-                    </div>}
+                <div style={{justifyContent:'center',alignItems:'center', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                    <Typography gutterBottom textAlign={'center'}>
+                        <img src={Logo} width='300' height='200' alt='logo'/> 
+                    </Typography>
+                    <Typography variant="h3" gutterBottom textAlign={'center'}>
+                        Welcome (:           
+                    </Typography>
+                </div>}
             </Box>
         </Box>
     );
