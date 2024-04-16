@@ -228,7 +228,7 @@ function Chat() {
                                             // .friendsOnly(true)
                                             .withTags(true);
 
-                                        uConfig = new UsersConfiguration({
+                                        let uConfig = new UsersConfiguration({
                                             hideSectionSeparator: true,
                                             showSectionHeader: false,
                                             usersStyle: uStyle,
