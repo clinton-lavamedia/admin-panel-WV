@@ -32,9 +32,9 @@ import { DataGrid } from '@mui/x-data-grid';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
-  });
-  const BASE_URL = process.env.REACT_APP_BASEURL
-  let UID = "heyo_user";
+});
+const BASE_URL = process.env.REACT_APP_BASEURL
+let UID = "heyo_user";
 function BroadcastChat() {
     const [user, setUser] = React.useState(undefined);
     const [isLoaded, setIsLoaded] = React.useState(false);
@@ -50,12 +50,12 @@ function BroadcastChat() {
     const [open, setOpen] = React.useState(false);
 
     const handleClickOpen = () => {
-      setOpen(true);
+        setOpen(true);
     };
-  
+
     const handleClose = () => {
         setErrorMessage('')
-      setOpen(false);
+        setOpen(false);
     };
 
     const handleSelectAllClick = (event) => {
@@ -70,7 +70,7 @@ function BroadcastChat() {
     const handleClick = (event, id) => {
         console.log(event, id)
         setSelected(event)
-        
+
     };
 
     const UIKitSettings = new UIKitSettingsBuilder()
@@ -81,36 +81,35 @@ function BroadcastChat() {
         .build();
     React.useEffect(() => {
 
-       /*  CometChat.getUser(UID).then(
-            user => {
-                console.log("User details fetched for user:", user);
-                setUser(user);
-            }, error => {
-                console.log("User details fetching failed with error:", error);
-            }
-        ); */
+        /*  CometChat.getUser(UID).then(
+             user => {
+                 console.log("User details fetched for user:", user);
+                 setUser(user);
+             }, error => {
+                 console.log("User details fetching failed with error:", error);
+             }
+         ); */
 
-
-        CometChatUIKit.init(UIKitSettings)
-            .then(() => {
-                console.log("Initialization completed successfully");
-                CometChatUIKit.getLoggedinUser().then((user) => {
-                    if (!user) {
+        CometChat.logout().then(
+            () => {
+                setUser(undefined);
+                CometChatUIKit.init(UIKitSettings)
+                    .then(() => {
+                        console.log("Initialization completed successfully");
                         CometChatUIKit.login(UID, consts.AUTH_KEY)
                             .then((user) => {
                                 console.log("Login Successful", { user });
                                 setUser(user);
                             })
                             .catch((error) => { }, console.log);
-                    } else {
-                        console.log("Already logged-in", { user });
                         setUser(user);
-                    }
-                });
+                    })
+                    .catch((e) => {
+                        console.log(e);
+                    });
+            }, error => {
+                console.log("Logout failed with exception:", { error });
             })
-            .catch((e) => {
-                console.log(e);
-            });
     }, []);
 
     React.useEffect(() => {
@@ -131,7 +130,7 @@ function BroadcastChat() {
                 // exceptions from actual bugs in components.
                 (error) => {
                     setIsLoaded(true);
-                   // setError(error);
+                    // setError(error);
                 }
             )
     }, [])
@@ -177,17 +176,18 @@ function BroadcastChat() {
             .then(response => response.json())
             .then(response => {
                 console.log(response)
-                if(response.error){
-                    let msg=errorMessage+'\nmsg: '+response.error.message
+                if (response.error) {
+                    let msg = errorMessage + '\nmsg: ' + response.error.message
                     setErrorMessage(msg)
                 }
-                 response=response.data.uids
-                for(let data in response ){
+                response = response.data.uids
+                for (let data in response) {
                     console.log(data)
-                    console.log(response[data].error? response[data].error.message :'false')
-                    if(response[data].error)
-                   { let msg=errorMessage+'\nid: '+data+' msg: '+response[data].error.message
-                    setErrorMessage(msg)}
+                    console.log(response[data].error ? response[data].error.message : 'false')
+                    if (response[data].error) {
+                        let msg = errorMessage + '\nid: ' + data + ' msg: ' + response[data].error.message
+                        setErrorMessage(msg)
+                    }
                 }
                 setOpen(true);
             }
@@ -203,7 +203,7 @@ function BroadcastChat() {
             </div>
             <div style={{ marginTop: 20 }}>
                 <TextField
-                    style={{width:'50%'}}
+                    style={{ width: '50%' }}
                     id="outlined-multiline-static"
                     label="Message"
                     placeholder="Enter message"
@@ -217,7 +217,7 @@ function BroadcastChat() {
 
 
             </div>
-            <div style={{ marginTop: 10,marginBottom:10 }}>
+            <div style={{ marginTop: 10, marginBottom: 10 }}>
                 <Button variant="outlined" color="primary" onClick={sendBulkMessage}
                 >Send</Button>
             </div>
@@ -230,26 +230,26 @@ function BroadcastChat() {
                         paginationModel: { page: 0, pageSize: 20 },
                     },
                 }}
-                pageSizeOptions={[20, 40, 60,80,100]}
+                pageSizeOptions={[20, 40, 60, 80, 100]}
                 checkboxSelection={!open}
                 onRowSelectionModelChange={(rowSelectionModel, details) => handleClick(rowSelectionModel, details)}
             />
- <Dialog
-        open={open}
-        TransitionComponent={Transition}
-        keepMounted
-        fullWidth
-        onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
-      >
-        <DialogTitle>{"Report"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
-           {errorMessage ? errorMessage : 'Successfully sent all message'}
-          </DialogContentText>
-        </DialogContent>
-       
-      </Dialog>
+            <Dialog
+                open={open}
+                TransitionComponent={Transition}
+                keepMounted
+                fullWidth
+                onClose={handleClose}
+                aria-describedby="alert-dialog-slide-description"
+            >
+                <DialogTitle>{"Report"}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-slide-description">
+                        {errorMessage ? errorMessage : 'Successfully sent all message'}
+                    </DialogContentText>
+                </DialogContent>
+
+            </Dialog>
         </div>
     )
         : (
