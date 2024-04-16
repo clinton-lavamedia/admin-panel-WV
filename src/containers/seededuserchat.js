@@ -216,7 +216,7 @@ function Chat() {
                         console.log("Initialization completed successfully");
                         CometChatUIKit.getLoggedinUser().then((user) => {
                             if (!user) {
-                                CometChatUIKit.login(seeded_user_id, consts.AUTH_KEY)
+                                CometChatUIKit.login('seeded_'+seeded_user_id.toString(), consts.AUTH_KEY)
                                     .then((user) => {
                                         console.log("Login Successful", { user });
                                         setUser(user);
