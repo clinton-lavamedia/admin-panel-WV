@@ -290,7 +290,7 @@ function Chat() {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: 400,
+       // width: 400,
         bgcolor: 'background.paper',
         border: '2px solid #000',
         boxShadow: 24,
@@ -310,7 +310,7 @@ function Chat() {
                 });
     };
     const handleAcceptProfile = (seededUserId, realUserId) => {
-        fetch(BASE_URL + "/admin-accept-request", {
+        fetch(BASE_URL + "/admin-seeded-accept-request", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -370,7 +370,7 @@ function Chat() {
             </div>
             {isRequestOpen && (
                 <Modal open={isRequestOpen} onClose={() => setIsRequestOpen(false)}>
-                    <Box sx={style}>
+                    <Box sx={{ ...style, maxHeight: '70vh', overflowY: 'auto' }}>
                         <Table>
                             <TableBody>
                                 {requestedProfiles.map((item) => (
