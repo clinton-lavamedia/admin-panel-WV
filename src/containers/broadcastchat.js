@@ -18,6 +18,7 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Checkbox from '@mui/material/Checkbox';
 import Box from '@mui/material/Box';
+import { CometChat } from "@cometchat/chat-sdk-javascript";
 
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
