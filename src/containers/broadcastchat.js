@@ -168,12 +168,12 @@ function BroadcastChat() {
                 accept: 'application/json',
                 onBehalfOf: UID.toString(),
                 'content-type': 'application/json',
-                apikey: 'b6b82b4b0434b97f248cd93ef817b94b76758ea7'
+                apikey: 'b1eefbb21e93639f2576dc2d9c68e3e751bf6358'
             },
             body: JSON.stringify({ category: 'message', type: 'text', data: { text: message }, multipleReceivers: { uids: selected } })
         };
         console.log(options)
-        fetch('https://2404783e5909fb6f.api-us.cometchat.io/v3/messages', options)
+        fetch('https://2535993d01b5203a.api-in.cometchat.io/v3/messages', options)
             .then(response => response.json())
             .then(response => {
                 console.log(response)
