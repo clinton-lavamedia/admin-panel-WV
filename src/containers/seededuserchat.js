@@ -1,4 +1,3 @@
-
 import { CometChatUIKit, UIKitSettingsBuilder } from "@cometchat/chat-uikit-react";
 import { CometChatUsersWithMessages, CometChatUsers } from '@cometchat/chat-uikit-react';
 import {
@@ -47,43 +46,7 @@ function Chat() {
         .setAuthKey(consts.AUTH_KEY)
         .subscribePresenceForFriends()
         .build();
-    /*  React.useEffect(() => {
-         let UID = "001";
-         CometChat.getUser(UID).then(
-             user => {
-                 console.log("User details fetched for user:", user);
-             }, error => {
-                 console.log("User details fetching failed with error:", error);
-             }
-         );
-         const UIKitSettings = new UIKitSettingsBuilder()
-             .setAppId(consts.APP_ID)
-             .setRegion(consts.REGION)
-             .setAuthKey(consts.AUTH_KEY)
-             .subscribePresenceForFriends()
-             .build();
- 
-         CometChatUIKit.init(UIKitSettings)
-             .then(() => {
-                 console.log("Initialization completed successfully");
-                 CometChatUIKit.getLoggedinUser().then((user) => {
-                     if (!user) {
-                         CometChatUIKit.login(UID, consts.AUTH_KEY)
-                             .then((user) => {
-                                 console.log("Login Successful", { user });
-                                 setUser(user);
-                             })
-                             .catch((error) => { }, console.log);
-                     } else {
-                         console.log("Already logged-in", { user });
-                         setUser(user);
-                     }
-                 });
-             })
-             .catch((e) => {
-                 console.log(e);
-             });
-     }, []); */
+
     React.useEffect(() => {
         fetch(BASE_URL + "/admin-get-seeded-users-matches")
             .then(res => res.json())
@@ -93,7 +56,6 @@ function Chat() {
                     setIsLoaded(true);
                     let data = result.data;
 
-                    //data[key].open = false
                     const mergedData = {};
                     data.forEach(obj => {
                         const { seeded_user_id, real_user_id, ...rest } = obj;
@@ -112,20 +74,11 @@ function Chat() {
                     console.log(JSON.stringify(merged_data.data));
                     console.log(merged_data.data)
 
-                    //  console.log(data)
-                    // data.delete( data[key].image_urls)
-
                     setItems(merged_data.data);
                     setUIDs(data[0].real_user_id)
-                    let UID = 'heyo_user' //data[0].seeded_user_id.toString();
+                    let UID = 'heyo_user' 
                     console.log(UID)
-                    /* CometChat.getUser(UID).then(
-                        user => {
-                            console.log("User details fetched for user:", user);
-                        }, error => {
-                            console.log("User details fetching failed with error:", error);
-                        }
-                    ); */
+
                     const UIKitSettings = new UIKitSettingsBuilder()
                         .setAppId(consts.APP_ID)
                         .setRegion(consts.REGION)
@@ -145,7 +98,6 @@ function Chat() {
                                         })
                                         .catch((error) => { }, console.log);
                                 } else {
-
                                     console.log("Already logged-in", { user });
                                     setUser(user);
                                     setIsLoaded(true);
@@ -155,15 +107,10 @@ function Chat() {
                         .catch((e) => {
                             console.log(e);
                             setUser(undefined)
-
                         });
                 },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
                 (error) => {
-                    // setIsLoaded(true);
-                    //setError(error);
+                    console.log("Error fetching data:", error);
                 }
             )
     }, [refresh])
@@ -172,39 +119,16 @@ function Chat() {
         console.log('user in list -> ', user)
         return (
             <div>
-
                 <span style={{ color: "#347fb9", font: "400 11px Inter, sans-serif" }}>
                     {user.uid} | {user.status} {user.lastActiveAt} |  {user.tags} |
                 </span>
-                {/*  <br/>
-           <span style={{ color: "#347fb9", font: "400 11px Inter, sans-serif" }}>
-         {'blocked-me: ' + user.hasBlockedMe} | {'blocked-by-me: ' + user.blockedByMe}
-         </span> */}
             </div>
         );
     };
-    const uStyle = new UsersStyle({
-        /*  background: "linear-gradient(#b6eae1, #D2FBAD)",
-         searchBorder: "1px solid #38aecc",
-         searchTextColor: "#38aecc",
-         searchPlaceholderTextColor: "#38aecc",
-         searchIconTint: "#38aecc",
-         loadingIconTint: "#38aecc",
-         onlineStatusColor: "yellow",
-         emptyStateTextColor: "#96DEDA",
-         titleTextColor: "#38aecc",
-         separatorColor: "#38aecc" */
-        // height:500
-    });
+
+    const uStyle = new UsersStyle({});
+
     let limit = 100;
-    /*  let tags = [];
-     let uConfig = new UsersConfiguration({
-         hideSectionSeparator: true,
-         showSectionHeader: false,
-         usersStyle: uStyle,
-         subtitleView: getSubtitleView,
-        // usersRequestBuilder: usersRequest
-     }); */
 
     function getChats(seeded_user_id, uids) {
         setUIDs(uids)
@@ -222,10 +146,6 @@ function Chat() {
                                         setUser(user);
                                         let usersRequest = new CometChat.UsersRequestBuilder()
                                             .setLimit(limit)
-                                            // .setUIDs([uids])
-                                            // .setTags(tags)
-                                            //.setStatus(CometChat.USER_STATUS.ONLINE)
-                                            // .friendsOnly(true)
                                             .withTags(true);
 
                                         let uConfig = new UsersConfiguration({
@@ -241,7 +161,6 @@ function Chat() {
                                         alert('User not created in cometchat')
                                         setUser(undefined)
                                         setRefresh(!refresh)
-
                                     });
                             } else {
                                 console.log("Already logged-in", { user });
@@ -254,7 +173,6 @@ function Chat() {
                         alert('User not created in cometchat')
                         setUser(undefined)
                         setRefresh(!refresh)
-
                     });
             }, error => {
                 console.log("Logout failed with exception:", { error });
@@ -262,16 +180,6 @@ function Chat() {
         );
     }
 
-    //const urb = new CometChat.UsersRequestBuilder().setLimit(30).sortBy("status");
-
-
-    /* const uwmStyle = new WithMessagesStyle({
-        width: "600px",
-        height: "600px",
-        border: "1px solid #38aecc",
-        background: "linear-gradient(#e9fbcf, #1d7d8e)",
-        messageTextColor: "#38aecc"
-    }); */
     const splitScreen = {
         display: 'flex',
         flexDirection: 'row',
@@ -290,25 +198,26 @@ function Chat() {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-       // width: 400,
         bgcolor: 'background.paper',
         border: '2px solid #000',
         boxShadow: 24,
         p: 4,
-      };
+    };
+
     const handleOpenRequests = () => {
         console.log('checking requests')
         fetch(BASE_URL + "/admin-seeded-friend-request")
                 .then(res => res.json())
                 .then(data => {
                     console.log(data.data)
-                    setRequests(data.data);
+                    setRequests(data.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
                     setIsRequestOpen(true);
                 })
                 .catch(error => {
                     console.error('Error fetching friend requests:', error);
                 });
     };
+
     const handleAcceptProfile = (seededUserId, realUserId) => {
         fetch(BASE_URL + "/admin-seeded-accept-request", {
             method: 'POST',
@@ -326,7 +235,6 @@ function Chat() {
             setIsRequestOpen(false)
             alert('Request accepted')
             console.log('Request accepted successfully:', data);
-            // Additional logic if needed after accepting the request
         })
         .catch(error => {
             setIsRequestOpen(false)
@@ -334,6 +242,7 @@ function Chat() {
             console.error('Error accepting request:', error);
         });
     };
+
     const handleRejectProfile = (seededUserId, realUserId) => {
         fetch(BASE_URL + "/admin-reject-request", {
             method: 'POST',
@@ -343,7 +252,7 @@ function Chat() {
             body: JSON.stringify({
                 source: seededUserId,
                 target: realUserId,
-                seeded:true
+                seeded: true
             })
         })
         .then(res => res.json())
@@ -351,7 +260,6 @@ function Chat() {
             setIsRequestOpen(false)
             console.log('Request rejected successfully:', data);
             alert('Request rejected success')
-            // Additional logic if needed after rejecting the request
         })
         .catch(error => {
             setIsRequestOpen(false)
@@ -359,8 +267,13 @@ function Chat() {
             console.error('Error rejecting request:', error);
         });
     };
-    return user ? (
 
+    const formatDate = (dateString) => {
+        const options = { timeZone: 'Asia/Kolkata', hour12: true, year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        return new Date(dateString).toLocaleString('en-IN', options);
+    };
+
+    return user ? (
         <div style={{ width: "95vw", height: "95vh" }}>
             <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
@@ -384,6 +297,9 @@ function Chat() {
                                             {item.real_first_name + ' ' + item.real_last_name}
                                         </TableCell>
                                         <TableCell>
+                                            {formatDate(item.created_at)}
+                                        </TableCell>
+                                        <TableCell>
                                             <Button variant="outlined" color="primary" size="small" style={{ marginRight: '10px' }} onClick={() => handleAcceptProfile(item.seeded_user_id, item.real_user_id)}>Accept</Button>
                                         </TableCell>
                                         <TableCell>
@@ -403,20 +319,11 @@ function Chat() {
                             return (
                                 <ListItem
                                     key={value.id}
-                                    /* secondaryAction={
-                                      <Checkbox
-                                        edge="end"
-                                        onChange={handleToggle(value)}
-                                        checked={checked.indexOf(value) !== -1}
-                                        inputProps={{ 'aria-labelledby': labelId }}
-                                      />
-                                    } */
                                     disablePadding
                                 >
                                     <ListItemButton
                                         onClick={() => {
                                             getChats(value.seeded_user_id, value.real_user_id)
-                                            // alert(value.seeded_user_id);
                                         }}
                                     >
                                         <ListItemAvatar>
@@ -433,14 +340,6 @@ function Chat() {
                     </List></div>
                 <div style={bottomPane}>
                     <div style={{ height: "90%", width: "100%" }}>
-                        {/* <CometChatUsers
-                 hideSectionSeparator= {true}
-                 showSectionHeader= {false}
-                 usersStyle= {uStyle}
-                 subtitleView= {getSubtitleView}
-                 usersRequestBuilder= {usersRequest}
-                    //usersConfiguration={uConfig}
-                /> */}
                         <CometChatUsersWithMessages
                             usersConfiguration={new UsersConfiguration({
                                 hideSectionSeparator: true,
@@ -450,25 +349,17 @@ function Chat() {
                                 usersRequestBuilder: new CometChat.UsersRequestBuilder()
                                     .setLimit(limit)
                                     .setUIDs(UIDs)
-                                    // .setTags(tags)
-                                    //.setStatus(CometChat.USER_STATUS.ONLINE)
-                                    // .friendsOnly(true)
                                     .withTags(true)
                             })}
-                        // messagesConfiguration={mConfig}
-                        // usersWithMessagesStyle={uwmStyle}
                         />
                     </div>
                 </div>
             </div>
-
-
         </div>
     )
         : (
             <div>Loading...</div>
         )
-
 }
 
 export default Chat;
