@@ -10,6 +10,9 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TablePagination from '@mui/material/TablePagination';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchIcon from '@mui/icons-material/Search';
 
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
@@ -25,6 +28,7 @@ export default function Notification() {
     const [open, setOpen] = React.useState(false);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(25);
+    const [dateFilter, setDateFilter] = React.useState('');
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -33,6 +37,10 @@ export default function Notification() {
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(+event.target.value);
         setPage(0);
+    };
+
+    const handleDateFilterChange = (event) => {
+        setDateFilter(event.target.value);
     };
 
     React.useEffect(() => {
@@ -114,8 +122,25 @@ export default function Notification() {
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
             <Typography variant="h3" gutterBottom textAlign={'center'}>
-                Notifications
+                Notification logs
             </Typography>
+            <TextField
+                id="date-filter"
+                label="Date Filter"
+                type="date"
+                value={dateFilter}
+                onChange={handleDateFilterChange}
+                InputLabelProps={{
+                    shrink: true,
+                }}
+                InputProps={{
+                    startAdornment: (
+                        <InputAdornment position="start">
+                            <SearchIcon />
+                        </InputAdornment>
+                    ),
+                }}
+            />
             <TableContainer sx={{ maxHeight: 600 }}>
                 <Table stickyHeader size="small" >
                     <TableHead>
@@ -127,12 +152,12 @@ export default function Notification() {
 
                             <TableCell align="center">Title</TableCell>
                             <TableCell align="center">Body</TableCell>
-                            <TableCell align="center">Sent At</TableCell>
+                            <TableCell >Sent At</TableCell>
 
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {items.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+                        {items.filter(item => item.createdAt.includes(dateFilter)).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                             <Row key={row._id} row={row} />
                         ))}
                     </TableBody>
