@@ -34,6 +34,7 @@ import Verification from './verification';
 import BroadcastChat from './broadcastchat';
 import Chat from './seededuserchat';
 import Notification from './notification'
+import Dashboard from './dashboard'
 const BASE_URL = process.env.REACT_APP_BASEURL;
 
 const drawerWidth = 240;
@@ -279,12 +280,13 @@ export default function Landing() {
                 {page == 'Push Notification' && <Notification/>}
                 {page == '' &&
                 <div style={{justifyContent:'center',alignItems:'center', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                    <Typography gutterBottom textAlign={'center'}>
+                   {/*  <Typography gutterBottom textAlign={'center'}>
                         <img src={Logo} width='300' height='200' alt='logo'/> 
                     </Typography>
                     <Typography variant="h3" gutterBottom textAlign={'center'}>
                         Welcome (:           
-                    </Typography>
+                    </Typography> */}
+                    <Dashboard/>
                 </div>}
             </Box>
         </Box>
