@@ -13,7 +13,7 @@ import TablePagination from '@mui/material/TablePagination';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
-
+import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -119,28 +119,54 @@ export default function Notification() {
         );
     }
 
+    const handleExportToExcel = () => {
+        const headers = ['User ID', 'Type', 'Mode', 'Title', 'Body', 'Sent At'];
+        const rows = items.map(item => [
+            item.userId,
+            item.data.type,
+            item.data.mode,
+            item.notificationTitle,
+            item.notificationBody,
+            formatDateToIST(item.createdAt)
+        ]);
+        const csvContent = [headers.join(','), ...rows.map(row => row.map(value => `"${value}"`).join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "notification_logs.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
             <Typography variant="h3" gutterBottom textAlign={'center'}>
                 Notification logs
             </Typography>
-            <TextField
-                id="date-filter"
-                label="Date Filter"
-                type="date"
-                value={dateFilter}
-                onChange={handleDateFilterChange}
-                InputLabelProps={{
-                    shrink: true,
-                }}
-                InputProps={{
-                    startAdornment: (
-                        <InputAdornment position="start">
-                            <SearchIcon />
-                        </InputAdornment>
-                    ),
-                }}
-            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <TextField
+                    id="date-filter"
+                    label="Date Filter"
+                    type="date"
+                    value={dateFilter}
+                    onChange={handleDateFilterChange}
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon />
+                            </InputAdornment>
+                        ),
+                    }}
+                />
+                <Button variant="contained" color="primary" onClick={handleExportToExcel} style={{ marginTop: '10px' }}>
+                    Download logs
+                </Button>
+            </Box>
             <TableContainer sx={{ maxHeight: 600 }}>
                 <Table stickyHeader size="small" >
                     <TableHead>
@@ -172,8 +198,8 @@ export default function Notification() {
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
             />
+           
         </Paper>
     );
 }
-
 
