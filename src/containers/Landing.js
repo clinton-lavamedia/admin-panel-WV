@@ -33,7 +33,7 @@ import Interests from './interests';
 import Verification from './verification';
 import BroadcastChat from './broadcastchat';
 import Chat from './seededuserchat';
-
+import Notification from './notification'
 const BASE_URL = process.env.REACT_APP_BASEURL;
 
 const drawerWidth = 240;
@@ -276,8 +276,8 @@ export default function Landing() {
                 {page == 'Cool Profiles' && <DemoUsers />}
                 {page == 'Chat - Seeded <> Real' && <Chat />}
                 {page == 'Broadcast Chat' &&<BroadcastChat/>}
-                {page == '' && 
-                
+                {page == 'Push Notification' && <Notification/>}
+                {page == '' &&
                 <div style={{justifyContent:'center',alignItems:'center', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                     <Typography gutterBottom textAlign={'center'}>
                         <img src={Logo} width='300' height='200' alt='logo'/> 
