@@ -3,6 +3,7 @@ import { CometChatUsersWithMessages, CometChatUsers } from '@cometchat/chat-uiki
 import {
     UsersConfiguration,
     UsersStyle,
+    ContactsConfiguration,
     MessagesConfiguration,
     MessageListConfiguration,
     MessageListStyle,
@@ -39,6 +40,11 @@ function Chat() {
     const [UIDs, setUIDs] = React.useState([]);
     const [isRequestOpen, setIsRequestOpen] = React.useState(false);
     const [requestedProfiles, setRequests] = React.useState([]);
+    const [selectedUserDetails, setSelectedUserDetails] = React.useState(null);
+    const [isUserDetailsOpen, setIsUserDetailsOpen] = React.useState(false);
+    const [selectedRealUserDetails, setSelectedRealUserDetails] = React.useState(null);
+    const [isRealUserDetailsOpen, setIsRealUserDetailsOpen] = React.useState(false);
+    const [selectedRealUserId, setSelectedRealUserId] = React.useState(null);
 
     const UIKitSettings = new UIKitSettingsBuilder()
         .setAppId(consts.APP_ID)
@@ -71,7 +77,7 @@ function Chat() {
                         data: Object.values(mergedData)
                     };
 
-                    console.log(JSON.stringify(merged_data.data));
+                   // console.log(JSON.stringify(merged_data.data));
                     console.log(merged_data.data)
 
                     setItems(merged_data.data);
@@ -116,11 +122,11 @@ function Chat() {
     }, [refresh])
 
     const getSubtitleView = (user) => {
-        console.log('user in list -> ', user)
+       // console.log('user in list -> ', user)
         return (
             <div>
                 <span style={{ color: "#347fb9", font: "400 11px Inter, sans-serif" }}>
-                    {user.uid} | {user.status} {user.lastActiveAt} |  {user.tags} |
+                    {user.uid} | {user.status} {user.lastActiveAt ? new Date(user.lastActiveAt * 1000).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true, year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'} 
                 </span>
             </div>
         );
@@ -132,6 +138,17 @@ function Chat() {
 
     function getChats(seeded_user_id, uids) {
         setUIDs(uids)
+         // Fetch user details
+         fetch(`${BASE_URL}/admin-get-seeded-users?userId=${seeded_user_id}`)
+         .then(res => res.json())
+         .then(data => {
+             if (data.status === "OK" && data.data && data.data.user && data.data.user.length > 0) {
+                 setSelectedUserDetails(data.data.user[0]);
+             }
+         })
+         .catch(error => {
+             console.error('Error fetching user details:', error);
+         });
         CometChat.logout().then(
             () => {
                 setUser(undefined);
@@ -155,6 +172,9 @@ function Chat() {
                                             subtitleView: getSubtitleView,
                                             usersRequestBuilder: usersRequest
                                         });
+
+                                       
+
                                     })
                                     .catch((error) => {
                                         console.log('error', error);
@@ -165,6 +185,7 @@ function Chat() {
                             } else {
                                 console.log("Already logged-in", { user });
                                 setUser(user);
+
                             }
                         });
                     })
@@ -178,6 +199,24 @@ function Chat() {
                 console.log("Logout failed with exception:", { error });
             }
         );
+    }
+    function handleOnItemClick(user) {
+        console.log(user, "your custom on item click action");
+        setSelectedRealUserId(user.uid)
+       // getRealUserDetails(user.uid)
+      }
+    function getRealUserDetails(real_user_id) {
+        fetch(`${BASE_URL}/admin-get-real-users?userId=${real_user_id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "OK" && data.data && data.data.user && data.data.user.length > 0) {
+                    setSelectedRealUserDetails(data.data.user[0]);
+                    setIsRealUserDetailsOpen(true);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching real user details:', error);
+            });
     }
 
     const splitScreen = {
@@ -210,7 +249,21 @@ function Chat() {
                 .then(res => res.json())
                 .then(data => {
                     console.log(data.data)
-                    setRequests(data.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+                    const groupedData = data.data.reduce((acc, item) => {
+                        if (!acc[item.real_user_id]) {
+                            acc[item.real_user_id] = {
+                                real_user_id: item.real_user_id,
+                                real_first_name: item.real_first_name,
+                                real_last_name: item.real_last_name,
+                                real_user_image_urls: item.real_user_image_urls,
+                                real_college_name: item.real_college_id,
+                                requests: []
+                            };
+                        }
+                        acc[item.real_user_id].requests.push(item);
+                        return acc;
+                    }, {});
+                    setRequests(Object.values(groupedData).sort((a, b) => new Date(b.requests[0].created_at) - new Date(a.requests[0].created_at)));
                     setIsRequestOpen(true);
                 })
                 .catch(error => {
@@ -277,35 +330,107 @@ function Chat() {
         <div style={{ width: "95vw", height: "95vh" }}>
             <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                    <div>Logged in as: {user.name + ' - User ID: ' + user.uid}</div>
+                    <div>
+                        Logged in as: {user.name + ' - User ID: ' + user.uid}
+                        {selectedUserDetails && (
+                            <div>
+                                <Button variant="contained" color="primary" onClick={() => setIsUserDetailsOpen(true)}> {selectedUserDetails.first_name} {selectedUserDetails.last_name} 's details</Button>
+                                <Modal open={isUserDetailsOpen} onClose={() => setIsUserDetailsOpen(false)}>
+                                    <Box sx={{ ...style, maxHeight: '70vh', overflowY: 'auto' }}>
+                                        <Typography variant="body1">Selected seeded user details:</Typography>
+                                        <Typography variant="body2">Name: {selectedUserDetails.first_name} {selectedUserDetails.last_name}</Typography>
+                                        <Typography variant="body2">Age: {selectedUserDetails.age}</Typography>
+                                        <Typography variant="body2">Gender: {selectedUserDetails.gender}</Typography>
+                                        <Typography variant="body2">Degree: {selectedUserDetails.degree}</Typography>
+                                        <Typography variant="body2">Year: {selectedUserDetails.year}</Typography>
+                                        <Typography variant="body2">College: {selectedUserDetails.college_id}</Typography>
+                                        <Typography variant="body2">Course: {selectedUserDetails.course_id}</Typography>
+                                        <Typography variant="body2">Interests: {selectedUserDetails.interests.map(interest => interest.subtopic).join(', ')}</Typography>
+                                        <div>
+                                            {selectedUserDetails.images.map(image => (
+                                                <img key={image.id} src={image.image_url} alt="User" style={{ width: '50px', height: '50px', marginRight: '5px' }} />
+                                            ))}
+                                        </div>
+                                    </Box>
+                                </Modal>
+                            </div>
+                        )}
+                        {selectedRealUserDetails && (
+                            <div>
+                                <Modal open={isRealUserDetailsOpen} onClose={() => setIsRealUserDetailsOpen(false)}>
+                                    <Box sx={{ ...style, maxHeight: '70vh', overflowY: 'auto' }}>
+                                        <Typography variant="body1">Selected real user details:</Typography>
+                                        <Typography variant="body2">Name: {selectedRealUserDetails.first_name} {selectedRealUserDetails.last_name}</Typography>
+                                        <Typography variant="body2">Age: {selectedRealUserDetails.age}</Typography>
+                                        <Typography variant="body2">Gender: {selectedRealUserDetails.gender}</Typography>
+                                        <Typography variant="body2">Degree: {selectedRealUserDetails.degree}</Typography>
+                                        <Typography variant="body2">Year: {selectedRealUserDetails.year}</Typography>
+                                        <Typography variant="body2">College: {selectedRealUserDetails.college_id}</Typography>
+                                        <Typography variant="body2">Course: {selectedRealUserDetails.course_id}</Typography>
+                                        <Typography variant="body2">Interests: {selectedRealUserDetails.interests.map(interest => interest.subtopic).join(', ')}</Typography>
+                                        <div>
+                                            {selectedRealUserDetails.images.map(image => (
+                                                <img key={image.id} src={image.image_url} alt="User" style={{ width: '50px', height: '50px', marginRight: '5px' }} />
+                                            ))}
+                                        </div>
+                                    </Box>
+                                </Modal>
+                            </div>
+                        )}
+                    </div>
                     <Button variant="contained" color="primary" onClick={handleOpenRequests}>View Requests</Button>
+                    {selectedRealUserId && (
+                        <Button variant="contained" color="secondary" onClick={() => getRealUserDetails(selectedRealUserId)}>View Real User Details</Button>
+                    )}
                 </div>
             </div>
             {isRequestOpen && (
                 <Modal open={isRequestOpen} onClose={() => setIsRequestOpen(false)}>
-                    <Box sx={{ ...style, maxHeight: '70vh', overflowY: 'auto' }}>
+                    <Box sx={{ ...style, maxHeight: '70vh', overflowY: 'auto', width: '60%' }}>
                         <Table>
                             <TableBody>
-                                {requestedProfiles.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>
-                                            <Avatar alt={item.seeded_first_name} src={item.seeded_user_image_urls[0]} />
-                                            {item.seeded_first_name + ' ' + item.seeded_last_name}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Avatar alt={item.real_first_name} src={item.real_user_image_urls[0]} />
-                                            {item.real_first_name + ' ' + item.real_last_name}
-                                        </TableCell>
-                                        <TableCell>
-                                            {formatDate(item.created_at)}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="outlined" color="primary" size="small" style={{ marginRight: '10px' }} onClick={() => handleAcceptProfile(item.seeded_user_id, item.real_user_id)}>Accept</Button>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="outlined" color="secondary" size="small" onClick={() => handleRejectProfile(item.seeded_user_id, item.real_user_id)}>Reject</Button>
-                                        </TableCell>
-                                    </TableRow>
+                                {requestedProfiles.map((group) => (
+                                    <React.Fragment key={group.real_user_id}>
+                                        <TableRow>
+                                            <TableCell colSpan={5}>
+                                                <Typography variant="h6">
+                                                    <Avatar alt={group.real_first_name} src={group.real_user_image_urls[0]} />
+                                                    {group.real_first_name + ' ' + group.real_last_name}
+                                                </Typography>
+                                                <Typography variant="subtitle1">
+                                                    {group.real_college_name}
+                                                </Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                        {group.requests.map((item) => (
+                                            <TableRow key={item.id}>
+                                                <TableCell>
+                                                    <Avatar alt={item.seeded_first_name} src={item.seeded_user_image_urls[0]} />
+                                                    {item.seeded_first_name + ' ' + item.seeded_last_name}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2">
+                                                        {Object.keys(item.chat_request).map(key => (
+                                                            key !== 'time' && (
+                                                                <div key={key}>
+                                                                    <strong>{key}:</strong> {key === 'mediaUrl' ? <img src={item.chat_request[key]} alt="media" style={{ width: '50px', height: '50px' }} /> : item.chat_request[key]}
+                                                                </div>
+                                                            )
+                                                        ))}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {formatDate(item.created_at)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button variant="outlined" color="primary" size="small" style={{ marginRight: '10px' }} onClick={() => handleAcceptProfile(item.seeded_user_id, item.real_user_id)}>Accept</Button>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button variant="outlined" color="secondary" size="small" onClick={() => handleRejectProfile(item.seeded_user_id, item.real_user_id)}>Reject</Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </React.Fragment>
                                 ))}
                             </TableBody>
                         </Table>
@@ -324,6 +449,7 @@ function Chat() {
                                     <ListItemButton
                                         onClick={() => {
                                             getChats(value.seeded_user_id, value.real_user_id)
+                                           // setSelectedRealUserId(value.real_user_id[0])
                                         }}
                                     >
                                         <ListItemAvatar>
@@ -340,17 +466,22 @@ function Chat() {
                     </List></div>
                 <div style={bottomPane}>
                     <div style={{ height: "90%", width: "100%" }}>
-                        <CometChatUsersWithMessages
+                    <CometChatUsersWithMessages
                             usersConfiguration={new UsersConfiguration({
                                 hideSectionSeparator: true,
-                                showSectionHeader: false,
+                                showSectionHeader: true,
                                 usersStyle: uStyle,
                                 subtitleView: getSubtitleView,
                                 usersRequestBuilder: new CometChat.UsersRequestBuilder()
                                     .setLimit(limit)
                                     .setUIDs(UIDs)
-                                    .withTags(true)
-                            })}
+                                    .withTags(true),
+                            })
+                        }
+                        startConversationConfiguration={new UsersConfiguration({
+                            onItemClick: handleOnItemClick
+                          })
+                        }
                         />
                     </div>
                 </div>
@@ -363,3 +494,4 @@ function Chat() {
 }
 
 export default Chat;
+

@@ -53,7 +53,8 @@ export default function Dashboard() {
                     setIsLoaded(true);
                     let data = result.data;
                     // Convert binary strings to counts
-                    data.last_login_date=data.counts.last_login_date
+                    data.last_login_date = data.counts.last_login_date
+                    data.created_at = data.counts.created_at
                     for (let category in data.counts) {
                         for (let key in data.counts[category]) {
                             if (typeof data.counts[category][key] === 'string') {
@@ -89,6 +90,29 @@ export default function Dashboard() {
                         acc[subtopic.name] = Number(subtopic.value);
                         return acc;
                     }, {});
+
+                    // Format created_at dates to month and year, and count each month
+                    let createdAtDates = data.created_at;
+                    let createdAtMonthlyCounts = {};
+                    for (let date in createdAtDates) {
+                        let month = new Date(date).toLocaleString('default', { month: 'long' });
+                        let year = new Date(date).getFullYear();
+                        if (!createdAtMonthlyCounts[year]) {
+                            createdAtMonthlyCounts[year] = {};
+                        }
+                        if (!createdAtMonthlyCounts[year][month]) {
+                            createdAtMonthlyCounts[year][month] = 0;
+                        }
+                        createdAtMonthlyCounts[year][month]++;
+                    }
+                    data.created_at = Object.entries(createdAtMonthlyCounts).map(([year, months]) => {
+                        return Object.entries(months).map(([month, count]) => ({ name: `${month} ${year}`, value: count }));
+                    }).flat().sort((b, a) => new Date(b.name) - new Date(a.name));
+                    data.created_at = data.created_at.reduce((acc, subtopic) => {
+                        acc[subtopic.name] = Number(subtopic.value);
+                        return acc;
+                    }, {});
+
                     // Process mostUsedSubtopics for male vs female
                     if (result.data.mostUsedSubtopics) {
                         let maleSubtopics = result.data.mostUsedSubtopics.filter(subtopic => subtopic.gender === 'male');
@@ -102,6 +126,15 @@ export default function Dashboard() {
                             return acc;
                         }, {});
                     }
+
+                    // Process userRequestStats for male vs female requests
+                    if (result.data.userRequestStats) {
+                        let maleToFemaleRequests = result.data.userRequestStats.filter(request => request.subject_gender === 'male' && request.target_gender === 'female').length;
+                        let femaleToMaleRequests = result.data.userRequestStats.filter(request => request.subject_gender === 'female' && request.target_gender === 'male').length;
+                        data.maleToFemaleRequests = maleToFemaleRequests;
+                        data.femaleToMaleRequests = femaleToMaleRequests;
+                    }
+
                     console.log(data)
                     setStats(data);
                 },
@@ -119,7 +152,7 @@ export default function Dashboard() {
         return (
             <React.Fragment>
                 <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
-                    
+
                     <TableCell component="th" scope="row">
                         {row.userId}
                     </TableCell>
@@ -133,15 +166,15 @@ export default function Dashboard() {
 
 
                 </TableRow>
-                
+
             </React.Fragment>
         );
     }
 
     const handleExportToExcel = () => {
         const headers = ['Category', 'Subcategory', 'Count'];
-        const rows = Object.entries(stats.counts || {}).flatMap(([category, subcategories]) => 
-            Object.entries(subcategories || {}).map(([subcategory, count]) => 
+        const rows = Object.entries(stats.counts || {}).flatMap(([category, subcategories]) =>
+            Object.entries(subcategories || {}).map(([subcategory, count]) =>
                 [category, subcategory, count]
             )
         );
@@ -158,8 +191,8 @@ export default function Dashboard() {
 
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-           
-           
+
+
             <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '33%' }}>
                     <Typography variant="h5" gutterBottom textAlign={'center'}>
@@ -189,97 +222,136 @@ export default function Dashboard() {
                     </PieChart>
                 </Box>
             </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '50%' }}>
+                    <Typography variant="h5" gutterBottom textAlign={'center'}>
+                        Male to female pending requests
+                    </Typography>
+                    <Typography variant="h6" gutterBottom textAlign={'center'}>
+                        {stats.maleToFemaleRequests}
+                    </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '50%' }}>
+                    <Typography variant="h5" gutterBottom textAlign={'center'}>
+                        Female to male pending requests
+                    </Typography>
+                    <Typography variant="h6" gutterBottom textAlign={'center'}>
+                        {stats.femaleToMaleRequests}
+                    </Typography>
+                </Box>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                 <Typography variant="h5" gutterBottom textAlign={'center'}>
-                        College
-                    </Typography>
-                    <LineChart width={1000} height={250} data={Object.entries(stats?.counts?.college_id || {}).map(([key, value], index) => ({ name: key, value: value, fill: `linear-gradient(to right, #ADD8E6, #000000)` }))} margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                    }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="value" stroke="#000" activeDot={{ r: 8 }} />
-                    </LineChart>
-                </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                    College
+                </Typography>
+                <LineChart width={1000} height={250} data={Object.entries(stats?.counts?.college_id || {}).map(([key, value], index) => ({ name: key, value: value, fill: `linear-gradient(to right, #ADD8E6, #000000)` }))} margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="value" stroke="#000" activeDot={{ r: 8 }} />
+                </LineChart>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                 <Typography variant="h5" gutterBottom textAlign={'center'}>
-                        Course
-                    </Typography>
-                    <LineChart width={1000} height={250} data={Object.entries(stats?.counts?.course_id || {}).map(([key, value], index) => ({ name: key, value: value, fill: `linear-gradient(to right, #ADD8E6, #000000)` }))} margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                    }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="value" stroke="#000" activeDot={{ r: 8 }} />
-                    </LineChart>
-                </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                    <Typography variant="h5" gutterBottom textAlign={'center'}>
-                        Last login
-                    </Typography>
-                    <LineChart width={1000} height={250} data={Object.entries(stats?.last_login_date || {}).map(([key, value], index) => ({ name: key, value: value, fill: `linear-gradient(to right, #ADD8E6, #000000)` }))} margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                    }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="value" stroke="#000" activeDot={{ r: 8 }} />
-                    </LineChart>
-                </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                    <Typography variant="h5" gutterBottom textAlign={'center'}>
-                        Male subtopics
-                    </Typography>
-                    <LineChart width={1100} height={350} data={Object.entries(stats?.maleSubtopics || {}).map(([key, value], index) => ({ name: key, value: value, fill: `linear-gradient(to right, #ADD8E6, #000000)` }))} margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                    }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="value" stroke="#000" activeDot={{ r: 8 }} />
-                    </LineChart>
-                </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                    <Typography variant="h5" gutterBottom textAlign={'center'}>
-                        Female subtopics
-                    </Typography>
-                    <LineChart width={1100} height={350} data={Object.entries(stats?.femaleSubtopics || {}).map(([key, value], index) => ({ name: key, value: value, fill: `linear-gradient(to right, #ADD8E6, #000000)` }))} margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                    }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="value" stroke="#000" activeDot={{ r: 8 }} />
-                    </LineChart>
-                </Box>
+                    Course
+                </Typography>
+                <LineChart width={1000} height={250} data={Object.entries(stats?.counts?.course_id || {}).map(([key, value], index) => ({ name: key, value: value, fill: `linear-gradient(to right, #ADD8E6, #000000)` }))} margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="value" stroke="#000" activeDot={{ r: 8 }} />
+                </LineChart>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                <Typography variant="h5" gutterBottom textAlign={'center'}>
+                    Last login
+                </Typography>
+                <LineChart width={1000} height={250} data={Object.entries(stats?.last_login_date || {}).map(([key, value], index) => ({ name: key, value: value, fill: `linear-gradient(to right, #ADD8E6, #000000)` }))} margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="value" stroke="#000" activeDot={{ r: 8 }} />
+                </LineChart>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                <Typography variant="h5" gutterBottom textAlign={'center'}>
+                    Profiles created on
+                </Typography>
+                <LineChart width={1000} height={250} data={Object.entries(stats?.created_at || {}).map(([key, value], index) => ({ name: key, value: value, fill: `linear-gradient(to right, #ADD8E6, #000000)` }))} margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="value" stroke="#000" activeDot={{ r: 8 }} />
+                </LineChart>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                <Typography variant="h5" gutterBottom textAlign={'center'}>
+                    Male subtopics
+                </Typography>
+                <LineChart width={1100} height={350} data={Object.entries(stats?.maleSubtopics || {}).map(([key, value], index) => ({ name: key, value: value, fill: `linear-gradient(to right, #ADD8E6, #000000)` }))} margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="value" stroke="#000" activeDot={{ r: 8 }} />
+                </LineChart>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                <Typography variant="h5" gutterBottom textAlign={'center'}>
+                    Female subtopics
+                </Typography>
+                <LineChart width={1100} height={350} data={Object.entries(stats?.femaleSubtopics || {}).map(([key, value], index) => ({ name: key, value: value, fill: `linear-gradient(to right, #ADD8E6, #000000)` }))} margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="value" stroke="#000" activeDot={{ r: 8 }} />
+                </LineChart>
+            </Box>
+
         </Paper>
     );
 }
+
 

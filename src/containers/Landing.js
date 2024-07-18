@@ -25,6 +25,7 @@ import ThreePOutlinedIcon from '@mui/icons-material/ThreePOutlined';
 import SpeakerNotesOutlinedIcon from '@mui/icons-material/SpeakerNotesOutlined';
 import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
+import InsightsIcon from '@mui/icons-material/Insights';
 import Logo from '../logo.png'
 import DemoUsers from './demousers';
 import SeededUsers from './seededusers';
@@ -206,7 +207,7 @@ export default function Landing() {
                 </DrawerHeader>
                 <Divider />
                 <List>
-                    {['Verification', 'Seeded Users', 'Cool Profiles','Super Users', 'Interests'].map((text, index) => (
+                    {['Dashboard','Verification', 'Seeded Users', 'Cool Profiles','Super Users', 'Interests'].map((text, index) => (
                         <ListItem key={text} disablePadding sx={{ display: 'block' }}>
                             <ListItemButton
                                 sx={{
@@ -223,11 +224,12 @@ export default function Landing() {
                                         justifyContent: 'center',
                                     }}
                                 >
-                                    {index ==0 &&  <HowToRegOutlinedIcon /> }
-                                    {index ==1 &&  <RecentActorsOutlinedIcon /> }
-                                    {index ==2 &&  <SettingsAccessibilityOutlinedIcon /> }
-                                    {index ==3 &&  <AdminPanelSettingsOutlinedIcon /> }
-                                    {index ==4 &&  <InterestsOutlinedIcon /> }
+                                    {index ==0 && <InsightsIcon/>}
+                                    {index ==1 &&  <HowToRegOutlinedIcon /> }
+                                    {index ==2 &&  <RecentActorsOutlinedIcon /> }
+                                    {index ==3 &&  <SettingsAccessibilityOutlinedIcon /> }
+                                    {index ==4 &&  <AdminPanelSettingsOutlinedIcon /> }
+                                    {index ==5 &&  <InterestsOutlinedIcon /> }
 
                                 </ListItemIcon>
                                 <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
@@ -269,6 +271,7 @@ export default function Landing() {
             
             <Box component="main" sx={{ display: 'flex', flexGrow: 1 ,p: 3,mt:5}}>
                {/*  <DrawerHeader /> */}
+               {page == 'Dashboard' && <Dashboard />}
 
                 {page == 'Verification' && <Verification />}
                 {page == 'Seeded Users' && <SeededUsers />}
