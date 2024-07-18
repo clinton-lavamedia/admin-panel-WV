@@ -1,5 +1,5 @@
 import { CometChatUIKit, UIKitSettingsBuilder } from "@cometchat/chat-uikit-react";
-import { CometChatUsersWithMessages, CometChatUsers } from '@cometchat/chat-uikit-react';
+import { CometChatUsersWithMessages, CometChatUsers,CometChatOption } from '@cometchat/chat-uikit-react';
 import {
     UsersConfiguration,
     UsersStyle,
@@ -122,21 +122,40 @@ function Chat() {
     }, [refresh])
 
     const getSubtitleView = (user) => {
+        function formatTime(timestamp) {
+            const date = new Date(timestamp * 1000);
+            return date.toLocaleString();
+          }
        // console.log('user in list -> ', user)
         return (
             <div>
                 <span style={{ color: "#347fb9", font: "400 11px Inter, sans-serif" }}>
-                    {user.uid} | {user.status} {user.lastActiveAt ? new Date(user.lastActiveAt * 1000).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true, year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'} 
+                    {user.uid} | {user.status} {user.lastActiveAt ? formatTime(user.lastActiveAt): 'N/A'} 
                 </span>
             </div>
         );
     };
-
+    const getHeaderView = (user) => {
+        function formatTime(timestamp) {
+            const date = new Date(timestamp * 1000);
+            return date.toLocaleString();
+          }
+        console.log('user in list -> ', user)
+       /*  return (
+            <div>
+                <span style={{ color: "#347fb9", font: "400 11px Inter, sans-serif" }}>
+                    {user.uid} | {user.status} {user.lastActiveAt ? formatTime(user.lastActiveAt): 'N/A'} 
+                </span>
+            </div>
+        ); */
+    };
+    
     const uStyle = new UsersStyle({});
 
     let limit = 100;
 
     function getChats(seeded_user_id, uids) {
+        console.log(uids)
         setUIDs(uids)
          // Fetch user details
          fetch(`${BASE_URL}/admin-get-seeded-users?userId=${seeded_user_id}`)
@@ -161,17 +180,17 @@ function Chat() {
                                     .then((user) => {
                                         console.log("Login Successful", { user });
                                         setUser(user);
-                                        let usersRequest = new CometChat.UsersRequestBuilder()
+                                       /*  let usersRequest = new CometChat.UsersRequestBuilder()
                                             .setLimit(limit)
-                                            .withTags(true);
+                                            .withTags(true); */
 
-                                        let uConfig = new UsersConfiguration({
+                                       /*  let uConfig = new UsersConfiguration({
                                             hideSectionSeparator: true,
                                             showSectionHeader: false,
                                             usersStyle: uStyle,
                                             subtitleView: getSubtitleView,
                                             usersRequestBuilder: usersRequest
-                                        });
+                                        }); */
 
                                        
 
@@ -200,11 +219,7 @@ function Chat() {
             }
         );
     }
-    function handleOnItemClick(user) {
-        console.log(user, "your custom on item click action");
-        setSelectedRealUserId(user.uid)
-       // getRealUserDetails(user.uid)
-      }
+  
     function getRealUserDetails(real_user_id) {
         fetch(`${BASE_URL}/admin-get-real-users?userId=${real_user_id}`)
             .then(res => res.json())
@@ -359,7 +374,6 @@ function Chat() {
                             <div>
                                 <Modal open={isRealUserDetailsOpen} onClose={() => setIsRealUserDetailsOpen(false)}>
                                     <Box sx={{ ...style, maxHeight: '70vh', overflowY: 'auto' }}>
-                                        <Typography variant="body1">Selected real user details:</Typography>
                                         <Typography variant="body2">Name: {selectedRealUserDetails.first_name} {selectedRealUserDetails.last_name}</Typography>
                                         <Typography variant="body2">Age: {selectedRealUserDetails.age}</Typography>
                                         <Typography variant="body2">Gender: {selectedRealUserDetails.gender}</Typography>
@@ -379,9 +393,9 @@ function Chat() {
                         )}
                     </div>
                     <Button variant="contained" color="primary" onClick={handleOpenRequests}>View Requests</Button>
-                    {selectedRealUserId && (
+                   {/*  {selectedRealUserId && (
                         <Button variant="contained" color="secondary" onClick={() => getRealUserDetails(selectedRealUserId)}>View Real User Details</Button>
-                    )}
+                    )} */}
                 </div>
             </div>
             {isRequestOpen && (
@@ -469,18 +483,33 @@ function Chat() {
                     <CometChatUsersWithMessages
                             usersConfiguration={new UsersConfiguration({
                                 hideSectionSeparator: true,
-                                showSectionHeader: true,
+                                showSectionHeader: false,
                                 usersStyle: uStyle,
                                 subtitleView: getSubtitleView,
+                                options: (user) => {
+                                    const customOptions = [
+                                      new CometChatOption({
+                                        id: "1",
+                                        title: "Details",
+                                        iconURL: "https://lavamedia-seeded-users-prod.s3.ap-south-1.amazonaws.com/1521/4852.jpeg",
+                                        backgroundColor: "grey",
+                                        onClick: () => {
+                                            getRealUserDetails(user.uid)
+                                          console.log("Custom option clicked for user:", user);
+                                        },
+                                        iconTint: "#890aff",
+                                        titleColor: "blue",
+                                      }),
+                                    ];
+                                    return customOptions;
+                                  },
                                 usersRequestBuilder: new CometChat.UsersRequestBuilder()
                                     .setLimit(limit)
                                     .setUIDs(UIDs)
                                     .withTags(true),
+                                   
+
                             })
-                        }
-                        startConversationConfiguration={new UsersConfiguration({
-                            onItemClick: handleOnItemClick
-                          })
                         }
                         />
                     </div>
