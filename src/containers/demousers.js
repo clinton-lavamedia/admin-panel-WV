@@ -16,7 +16,8 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-const BASE_URL = process.env.REACT_APP_BASEURL
+const BASE_URL = process.env.REACT_APP_BASEURL;
+const DEV_BASE_URL = process.env.REACT_APP_DEV_BASEURL;
 
 export default function DemoUsers() {
     const [error, setError] = React.useState(null);
@@ -32,7 +33,10 @@ export default function DemoUsers() {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(25);
     const [checked, setChecked] = React.useState(true);
-
+    const [isProd, setIsProd] = React.useState(() => {
+        const savedEnv = sessionStorage.getItem('isProd');
+        return savedEnv !== null ? JSON.parse(savedEnv) : true;
+    });
     const handleChange = (event) => {
         setChecked(event.target.checked);
     };
@@ -47,7 +51,7 @@ export default function DemoUsers() {
     };
 
     React.useEffect(() => {
-        fetch(BASE_URL + "/admin-get-demo-users")
+        fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-get-demo-users")
             .then(res => res.json())
             .then(
                 (result) => {

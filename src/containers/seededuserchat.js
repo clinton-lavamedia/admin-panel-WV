@@ -30,7 +30,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TablePagination from '@mui/material/TablePagination';
-const BASE_URL = process.env.REACT_APP_BASEURL
+const BASE_URL = process.env.REACT_APP_BASEURL;
+const DEV_BASE_URL = process.env.REACT_APP_DEV_BASEURL;
 
 function Chat() {
     const [user, setUser] = React.useState(undefined);
@@ -45,16 +46,19 @@ function Chat() {
     const [selectedRealUserDetails, setSelectedRealUserDetails] = React.useState(null);
     const [isRealUserDetailsOpen, setIsRealUserDetailsOpen] = React.useState(false);
     const [selectedRealUserId, setSelectedRealUserId] = React.useState(null);
-
+    const [isProd, setIsProd] = React.useState(() => {
+        const savedEnv = sessionStorage.getItem('isProd');
+        return savedEnv !== null ? JSON.parse(savedEnv) : true;
+    });
     const UIKitSettings = new UIKitSettingsBuilder()
-        .setAppId(consts.APP_ID)
-        .setRegion(consts.REGION)
-        .setAuthKey(consts.AUTH_KEY)
+        .setAppId(isProd ? consts.APP_ID : consts.DEV_APP_ID)
+        .setRegion(isProd ? consts.REGION : consts.DEV_REGION)
+        .setAuthKey(isProd ? consts.AUTH_KEY : consts.DEV_AUTH_KEY)
         .subscribePresenceForFriends()
         .build();
 
     React.useEffect(() => {
-        fetch(BASE_URL + "/admin-get-seeded-users-matches")
+        fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-get-seeded-users-matches")
             .then(res => res.json())
             .then(
                 (result) => {
@@ -86,9 +90,9 @@ function Chat() {
                     console.log(UID)
 
                     const UIKitSettings = new UIKitSettingsBuilder()
-                        .setAppId(consts.APP_ID)
-                        .setRegion(consts.REGION)
-                        .setAuthKey(consts.AUTH_KEY)
+                        .setAppId(isProd ? consts.APP_ID : consts.DEV_APP_ID)
+                        .setRegion(isProd ? consts.REGION : consts.DEV_REGION)
+                        .setAuthKey(isProd ? consts.AUTH_KEY : consts.DEV_AUTH_KEY)
                         .subscribePresenceForFriends()
                         .build();
 
@@ -158,7 +162,7 @@ function Chat() {
         console.log(uids)
         setUIDs(uids)
          // Fetch user details
-         fetch(`${BASE_URL}/admin-get-seeded-users?userId=${seeded_user_id}`)
+         fetch((isProd ? BASE_URL : DEV_BASE_URL) + `/admin-get-seeded-users?userId=${seeded_user_id}`)
          .then(res => res.json())
          .then(data => {
              if (data.status === "OK" && data.data && data.data.user && data.data.user.length > 0) {
@@ -221,7 +225,7 @@ function Chat() {
     }
   
     function getRealUserDetails(real_user_id) {
-        fetch(`${BASE_URL}/admin-get-real-users?userId=${real_user_id}`)
+        fetch((isProd ? BASE_URL : DEV_BASE_URL) + `/admin-get-real-users?userId=${real_user_id}`)
             .then(res => res.json())
             .then(data => {
                 if (data.status === "OK" && data.data && data.data.user && data.data.user.length > 0) {
@@ -260,7 +264,7 @@ function Chat() {
 
     const handleOpenRequests = () => {
         console.log('checking requests')
-        fetch(BASE_URL + "/admin-seeded-friend-request")
+        fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-seeded-friend-request")
                 .then(res => res.json())
                 .then(data => {
                     console.log(data.data)
@@ -287,7 +291,7 @@ function Chat() {
     };
 
     const handleAcceptProfile = (seededUserId, realUserId) => {
-        fetch(BASE_URL + "/admin-seeded-accept-request", {
+        fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-seeded-accept-request", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -312,7 +316,7 @@ function Chat() {
     };
 
     const handleRejectProfile = (seededUserId, realUserId) => {
-        fetch(BASE_URL + "/admin-reject-request", {
+        fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-reject-request", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

@@ -21,7 +21,8 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Sector, Cell, Recharts } from 'recharts';
 /* import { HeatMap, Tooltip as HeatMapTooltip } from 'recharts';
  */
-const BASE_URL = 'http://ec2-65-1-12-87.ap-south-1.compute.amazonaws.com/user/admin-stats';
+const BASE_URL = process.env.REACT_APP_BASEURL;
+const DEV_BASE_URL = process.env.REACT_APP_DEV_BASEURL;
 
 export default function Dashboard() {
     const [error, setError] = React.useState(null);
@@ -29,7 +30,10 @@ export default function Dashboard() {
     const [stats, setStats] = React.useState({});
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(25);
-
+    const [isProd, setIsProd] = React.useState(() => {
+        const savedEnv = sessionStorage.getItem('isProd');
+        return savedEnv !== null ? JSON.parse(savedEnv) : true;
+    });
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
@@ -40,12 +44,8 @@ export default function Dashboard() {
     };
 
     React.useEffect(() => {
-        fetch(BASE_URL, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
+        fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-stats")
+
             .then(res => res.json())
             .then(
                 (result) => {

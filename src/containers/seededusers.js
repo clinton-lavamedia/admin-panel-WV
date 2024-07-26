@@ -19,7 +19,8 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Typography from '@mui/material/Typography';
 
-const BASE_URL = process.env.REACT_APP_BASEURL
+const BASE_URL = process.env.REACT_APP_BASEURL;
+const DEV_BASE_URL = process.env.REACT_APP_DEV_BASEURL;
 
 export default function SeededUsers() {
   const [error, setError] = React.useState(null);
@@ -34,7 +35,10 @@ export default function SeededUsers() {
   const [rerender, setRerender] = React.useState(false);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
-
+  const [isProd, setIsProd] = React.useState(() => {
+    const savedEnv = sessionStorage.getItem('isProd');
+    return savedEnv !== null ? JSON.parse(savedEnv) : true;
+});
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -45,7 +49,7 @@ export default function SeededUsers() {
   };
 
   React.useEffect(() => {
-    fetch(BASE_URL + "/admin-get-seeded-users")
+    fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-get-seeded-users")
       .then(res => res.json())
       .then(
         (result) => {

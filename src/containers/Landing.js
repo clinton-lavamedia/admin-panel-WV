@@ -26,6 +26,7 @@ import SpeakerNotesOutlinedIcon from '@mui/icons-material/SpeakerNotesOutlined';
 import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import InsightsIcon from '@mui/icons-material/Insights';
+import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import Logo from '../logo.png'
 import DemoUsers from './demousers';
 import SeededUsers from './seededusers';
@@ -36,7 +37,9 @@ import BroadcastChat from './broadcastchat';
 import Chat from './seededuserchat';
 import Notification from './notification'
 import Dashboard from './dashboard'
+import Threads from './threads'
 const BASE_URL = process.env.REACT_APP_BASEURL;
+const DEV_BASE_URL = process.env.REACT_APP_DEV_BASEURL;
 
 const drawerWidth = 240;
 
@@ -113,6 +116,10 @@ export default function Landing() {
     const [isLoaded, setIsLoaded] = useState(false);
     const [items, setItems] = useState([]);
     const [refresh, setRefresh] = useState(false);
+    const [isProd, setIsProd] = useState(() => {
+        const savedEnv = sessionStorage.getItem('isProd');
+        return savedEnv !== null ? JSON.parse(savedEnv) : true;
+    });
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -120,7 +127,7 @@ export default function Landing() {
         setUser(token)
     }, []);
     useEffect(() => {
-        fetch(BASE_URL + "/admin-stats")
+        fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-stats")
           .then(res => res.json())
           .then(
             (result) => {
@@ -141,7 +148,7 @@ export default function Landing() {
               setIsLoaded(true);
             }
           )
-      }, [refresh])
+      }, [refresh, isProd])
     const handleDrawerOpen = () => {
         setOpen(true);
     };
@@ -165,6 +172,15 @@ export default function Landing() {
           },
         },
       });
+
+    const toggleEnv = () => {
+        setIsProd(prevIsProd => {
+            const newIsProd = !prevIsProd;
+            sessionStorage.setItem('isProd', JSON.stringify(newIsProd));
+            window.location.reload(); // Refresh the entire site
+            return newIsProd;
+        });
+    };
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -191,10 +207,30 @@ export default function Landing() {
                         {user}
                     </Typography>
                     </Typography>
-                    
+                    {isProd && <div style={{ width: 15, height: 15, margin: 10, borderRadius: '50%', backgroundColor: 'green', animation: 'pulse 1s infinite' }}></div>}
+                    <style>
+                        {`
+                            @keyframes pulse {
+                                0% {
+                                    transform: scale(1);
+                                }
+                                50% {
+                                    transform: scale(1.1);
+                                }
+                                100% {
+                                    transform: scale(1.5);
+                                }
+                            }
+                        `}
+                    </style>
+
+                    <Button style={{margin:10}} variant="contained" color='primary' onClick={toggleEnv}>
+                        {isProd ? 'Switch to Dev' : 'Switch to Prod'}
+                    </Button>
                     <Button variant="contained" color='error' onClick={handleLogout}>
                         Logout
                     </Button>
+                   
                 </Toolbar>
             </AppBar>
             </ThemeProvider>
@@ -239,16 +275,15 @@ export default function Landing() {
                 </List>
                 <Divider />
                 <List>
-                    {['Chat - Seeded <> Real', 'Broadcast Chat', 'Push Notification'].map((text, index) => (
+                    {['Chat - Seeded <> Real', 'Broadcast Chat', 'Push Notification', 'Threads'].map((text, index) => (
                         <ListItem key={text} disablePadding sx={{ display: 'block' }}>
-                            <ListItemButton
+                                                       <ListItemButton
                                 sx={{
                                     minHeight: 48,
                                     justifyContent: open ? 'initial' : 'center',
                                     px: 2.5,
                                 }}
                                 onClick={(event) => handleListItemClick(event, text)}
-
                             >
                                 <ListItemIcon
                                     sx={{
@@ -260,6 +295,7 @@ export default function Landing() {
                                     {index ==0 &&  <ThreePOutlinedIcon /> }
                                     {index ==1 &&  <SpeakerNotesOutlinedIcon /> }
                                     {index ==2 &&  <CampaignOutlinedIcon /> }
+                                    {index ==3 &&  <ForumOutlinedIcon /> }
                                 </ListItemIcon>
                                 <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
                             </ListItemButton>
@@ -278,16 +314,22 @@ export default function Landing() {
                 {page == 'Super Users' && <SuperUsers />}
                 {page == 'Interests' && <Interests />}
                 {page == 'Cool Profiles' && <DemoUsers />}
-                {page == 'Chat - Seeded <> Real' && <Chat />}
-                {page == 'Broadcast Chat' &&<BroadcastChat/>}
-                {page == 'Push Notification' && <Notification/>}
+                {isProd && page == 'Chat - Seeded <> Real' && <Chat />}
+                {isProd && page == 'Broadcast Chat' &&<BroadcastChat/>}
+                {isProd && page == 'Push Notification' && <Notification/>}
+                {page == 'Threads' && <Threads/>}
+                {!isProd && (page == 'Chat - Seeded <> Real' || page == 'Broadcast Chat' || page == 'Push Notification') && (
+                    <Typography variant="h6" color="error">
+                        This feature is not available in dev mode.
+                    </Typography>
+                )}
                 {page == '' &&
                 <div style={{justifyContent:'center',alignItems:'center', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                    {/*  <Typography gutterBottom textAlign={'center'}>
                         <img src={Logo} width='300' height='200' alt='logo'/> 
                     </Typography>
                     <Typography variant="h3" gutterBottom textAlign={'center'}>
-                        Welcome (:           
+                        Not available right now           
                     </Typography> */}
                     <Dashboard/>
                 </div>}
