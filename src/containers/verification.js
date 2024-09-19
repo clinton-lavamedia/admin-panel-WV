@@ -28,8 +28,9 @@ import Button from '@mui/material/Button';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Container from '@mui/material/Container';
-
-const BASE_URL = process.env.REACT_APP_BASEURL
+import Modal from '@mui/material/Modal';
+const BASE_URL = process.env.REACT_APP_BASEURL;
+const DEV_BASE_URL = process.env.REACT_APP_DEV_BASEURL;
 
 export default function Verification(props) {
   const [error, setError] = React.useState(null);
@@ -42,7 +43,11 @@ export default function Verification(props) {
   const [payload, setPayload] = React.useState({});
   const [notes, setNotes] = React.useState('');
   const [rerender, setRerender] = React.useState(false);
-
+  const [openImageModal, setOpenImageModal] = React.useState(false);
+  const [isProd, setIsProd] = React.useState(() => {
+    const savedEnv = sessionStorage.getItem('isProd');
+    return savedEnv !== null ? JSON.parse(savedEnv) : true;
+});
   const handleClose = () => {
     setOpenReject(false);
   };
@@ -61,7 +66,7 @@ export default function Verification(props) {
       img_url: row.img_url,
       attempts: row.attempts + 1,
       verified: event.target.value == 'approve' ? true : false,
-      admin_id: 2,
+      admin_id: token,
       notes: { img: row.img_url, admin_id: token }
     }
     if (event.target.value == 'reject') {
@@ -75,7 +80,7 @@ export default function Verification(props) {
     //setApproval(option);
   };
   function handleApprove(payload) {
-    fetch(BASE_URL + '/admin-update-user-verification', {
+    fetch((isProd ? BASE_URL : DEV_BASE_URL) + '/admin-update-user-verification', {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -117,6 +122,7 @@ export default function Verification(props) {
   function Row(row) {
     console.log(row)
     row = row.row
+    console.log((row.image_urls && row.image_urls[0] !== null))
     return (
       <React.Fragment>
         <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} >
@@ -132,8 +138,16 @@ export default function Verification(props) {
           <TableCell component="th" scope="row">
             {row.user_id}
           </TableCell>
-          <TableCell align="center">{row.first_name + ' '+ row.last_name}</TableCell>
-          <TableCell align="center">{row.attempts}</TableCell>
+          <TableCell align="center">
+            <Avatar alt="id_img"
+              variant="square"
+              //sx={{ width: 24, height: 24 }}
+              src={row.image_data[0].img} />
+          </TableCell>
+          <TableCell align="center">{row.username}</TableCell>
+
+{/*           <TableCell align="center">{row.first_name + ' '+ row.last_name}</TableCell>
+ */}          <TableCell align="center">{row.attempts}</TableCell>
           <TableCell align="center">
             <Avatar alt="id_img"
               variant="square"
@@ -164,12 +178,32 @@ export default function Verification(props) {
 
 
                 <img
-
                   width={300}
                   height={300}
                   src={row.img_url}
+                  onClick={() => setOpenImageModal(true)}
+                  style={{ cursor: 'pointer' }}
                 />
-                <Typography variant="h6" gutterBottom component="div" align='center'>
+                <Modal
+                  open={openImageModal}
+                  onClose={() => setOpenImageModal(false)}
+                  aria-labelledby="modal-title"
+                  aria-describedby="modal-description"
+                >
+                  <Box 
+                    sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+                    onClick={() => setOpenImageModal(false)}
+                  >
+                    <img
+                      width="80%"
+                      height="80%"
+                      src={row.img_url}
+                      alt="Expanded view"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </Box>
+                </Modal>
+               {/*  <Typography variant="h6" gutterBottom component="div" align='center'>
                   Profile images
                 </Typography>
                 <ImageList
@@ -186,7 +220,7 @@ export default function Verification(props) {
                       />
                     </ImageListItem>
                   ))}
-                </ImageList>
+                </ImageList> */}
               </Box>
             </Collapse>
           </TableCell>
@@ -241,7 +275,7 @@ export default function Verification(props) {
   }
  
   React.useEffect(() => {
-    fetch(BASE_URL + "/admin-get-user-verification")
+    fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-get-user-verification")
       .then(res => res.json())
       .then(
         (result) => {
@@ -288,15 +322,19 @@ export default function Verification(props) {
       <div>
         {isLoaded &&
 
-          <div style={{ alignContent: 'center', alignItems: 'center', display: 'flex', margin: 10 }}>
+          <div style={{ alignContent: 'center', alignItems: 'center', display: 'flex', margin: 10, width: '100%' }}>
 
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} style={{ width: '100%' }}>
               <Table aria-label="collapsible table" size="small" stickyHeader dense>
                 <TableHead>
                   <TableRow>
                     <TableCell />
                     <TableCell>ID</TableCell>
-                    <TableCell align="center">Name</TableCell>
+{/*                     <TableCell align="center">Name</TableCell>
+ */}                    <TableCell align="center">Avatar</TableCell>
+
+                  <TableCell align="center">Username</TableCell>
+
                     <TableCell align="center">Attempts</TableCell>
                     <TableCell align="center">ID image</TableCell>
                     <TableCell align="center">Verified</TableCell>
