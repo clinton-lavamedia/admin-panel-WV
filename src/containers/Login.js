@@ -63,6 +63,8 @@ export default function Login() {
           console.log('logged in')
           navigate("/landing");
           localStorage.setItem('token', email)
+          localStorage.setItem('admin_id', result.data[0].id)
+
         } else {
           setOpen(true);
         }

@@ -29,6 +29,9 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Container from '@mui/material/Container';
 import Modal from '@mui/material/Modal';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+
 const BASE_URL = process.env.REACT_APP_BASEURL;
 const DEV_BASE_URL = process.env.REACT_APP_DEV_BASEURL;
 
@@ -47,18 +50,22 @@ export default function Verification(props) {
   const [isProd, setIsProd] = React.useState(() => {
     const savedEnv = sessionStorage.getItem('isProd');
     return savedEnv !== null ? JSON.parse(savedEnv) : true;
-});
+  });
+  const [tabValue, setTabValue] = React.useState(0);
+
   const handleClose = () => {
     setOpenReject(false);
   };
   const handleSave = () => {
     const token = localStorage.getItem("token");
     setOpenReject(false);
-    payload.notes = token +': '+notes;
+    payload.notes = token + ': ' + notes;
     handleApprove(payload);
   };
   const handleChange = (event, row) => {
     const token = localStorage.getItem("token");
+    const admin_id = localStorage.getItem("admin_id");
+
     console.log(event.target.value, row)
     let payload = {
       id: row.id,
@@ -66,7 +73,7 @@ export default function Verification(props) {
       img_url: row.img_url,
       attempts: row.attempts + 1,
       verified: event.target.value == 'approve' ? true : false,
-      admin_id: token,
+      admin_id: admin_id,
       notes: { img: row.img_url, admin_id: token }
     }
     if (event.target.value == 'reject') {
@@ -118,7 +125,7 @@ export default function Verification(props) {
     setItems(items)
     setRerender(!rerender)
   }
- 
+
   function Row(row) {
     console.log(row)
     row = row.row
@@ -144,16 +151,18 @@ export default function Verification(props) {
               //sx={{ width: 24, height: 24 }}
               src={row.image_data[0].img} />
           </TableCell>
-          <TableCell align="center">{row.username}</TableCell>
+          <TableCell align="center">{row.phone_number}</TableCell>
 
-{/*           <TableCell align="center">{row.first_name + ' '+ row.last_name}</TableCell>
- */}          <TableCell align="center">{row.attempts}</TableCell>
-          <TableCell align="center">
-            <Avatar alt="id_img"
-              variant="square"
-              sx={{ width: 56, height: 56 }}
-              src={row.img_url} />
-          </TableCell>
+          {/* <TableCell align="center">{row.first_name + ' '+ row.last_name}</TableCell> */}
+          <TableCell align="center">{row.attempts}</TableCell>
+          {tabValue === 0 && (
+            <TableCell align="center">
+              <Avatar alt="id_img"
+                variant="square"
+                sx={{ width: 56, height: 56 }}
+                src={row.img_url} />
+            </TableCell>
+          )}
           <TableCell align="center">{row.verified ? 'true' : 'false'}</TableCell>
           <TableCell align="center">
             <ToggleButtonGroup
@@ -190,7 +199,7 @@ export default function Verification(props) {
                   aria-labelledby="modal-title"
                   aria-describedby="modal-description"
                 >
-                  <Box 
+                  <Box
                     sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
                     onClick={() => setOpenImageModal(false)}
                   >
@@ -203,7 +212,7 @@ export default function Verification(props) {
                     />
                   </Box>
                 </Modal>
-               {/*  <Typography variant="h6" gutterBottom component="div" align='center'>
+                {/* <Typography variant="h6" gutterBottom component="div" align='center'>
                   Profile images
                 </Typography>
                 <ImageList
@@ -229,41 +238,41 @@ export default function Verification(props) {
           <TableRow>
 
             <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={12}>
-            <Collapse in={row.open} timeout="auto" unmountOnExit>
+              <Collapse in={row.open} timeout="auto" unmountOnExit>
 
-              <Table size="small" aria-label="purchases">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Admin</TableCell>
-                    <TableCell>Verified</TableCell>
-                    <TableCell>ID image</TableCell>
-                    <TableCell>Attempts</TableCell>
+                <Table size="small" aria-label="purchases">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Admin</TableCell>
+                      <TableCell>Verified</TableCell>
+                      <TableCell>ID image</TableCell>
+                      <TableCell>Attempts</TableCell>
 
-                    <TableCell>Notes</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {row.logs.map((historyRow) => (
-                    <TableRow key={historyRow.date}>
-                      <TableCell component="th" scope="row">
-                        {historyRow.admin_id}
-                      </TableCell>
-                      <TableCell>{historyRow.verified ? 'approve' : 'reject'}</TableCell>
-                      <TableCell align="center">
-                        <Avatar alt="id_img"
-                          variant="square"
-                          sx={{ width: 56, height: 56 }}
-                          src={historyRow.img_url} />
-                      </TableCell>
-
-                      <TableCell align="center">{historyRow.attempts}</TableCell>
-                      <TableCell align="center">
-                        {historyRow.notes}
-                      </TableCell>
+                      <TableCell>Notes</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {row.logs.map((historyRow) => (
+                      <TableRow key={historyRow.date}>
+                        <TableCell component="th" scope="row">
+                          {historyRow.notes.split(':')[0]}
+                        </TableCell>
+                        <TableCell>{historyRow.verified ? 'approve' : 'reject'}</TableCell>
+                        <TableCell align="center">
+                          <Avatar alt="id_img"
+                            variant="square"
+                            sx={{ width: 56, height: 56 }}
+                            src={historyRow.img_url} />
+                        </TableCell>
+
+                        <TableCell align="center">{historyRow.attempts}</TableCell>
+                        <TableCell align="center">
+                          {historyRow.notes.split(':')[1]}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </Collapse>
 
             </TableCell>
@@ -273,7 +282,7 @@ export default function Verification(props) {
       </React.Fragment>
     );
   }
- 
+
   React.useEffect(() => {
     fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-get-user-verification")
       .then(res => res.json())
@@ -316,34 +325,45 @@ export default function Verification(props) {
         }
       )
   }, [refresh])
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
+  const filteredItems = items.filter(item => {
+    if (tabValue === 0) {
+      return item.img_url;
+    } else {
+      return !item.img_url;
+    }
+  });
+
   return (
     <div>
-    
+      <Tabs value={tabValue} onChange={handleTabChange} aria-label="verification tabs">
+        <Tab label="Pending" />
+        <Tab label="Rejected" />
+      </Tabs>
       <div>
         {isLoaded &&
-
           <div style={{ alignContent: 'center', alignItems: 'center', display: 'flex', margin: 10, width: '100%' }}>
-
             <TableContainer component={Paper} style={{ width: '100%' }}>
               <Table aria-label="collapsible table" size="small" stickyHeader dense>
                 <TableHead>
                   <TableRow>
                     <TableCell />
                     <TableCell>ID</TableCell>
-{/*                     <TableCell align="center">Name</TableCell>
- */}                    <TableCell align="center">Avatar</TableCell>
-
-                  <TableCell align="center">Username</TableCell>
-
+                    {/* <TableCell align="center">Name</TableCell> */}
+                    <TableCell align="center">Avatar</TableCell>
+                    <TableCell align="center">Phone</TableCell>
                     <TableCell align="center">Attempts</TableCell>
-                    <TableCell align="center">ID image</TableCell>
+                    {tabValue === 0 && <TableCell align="center">ID image</TableCell>}
                     <TableCell align="center">Verified</TableCell>
                     <TableCell align="center">Action</TableCell>
-
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {items.map((row) => (
+                  {filteredItems.map((row) => (
                     <Row key={row.id} row={row} />
                   ))}
                 </TableBody>
@@ -355,7 +375,6 @@ export default function Verification(props) {
                 <DialogContentText>
                   Add a reason for rejection
                 </DialogContentText>
-
                 <TextField
                   fullWidth
                   htmlFor="notes"
@@ -375,8 +394,5 @@ export default function Verification(props) {
           </div>}
       </div>
     </div>
-
-
-
   );
 }
