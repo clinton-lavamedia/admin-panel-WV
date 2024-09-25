@@ -14,6 +14,8 @@
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
     "@fontsource/roboto": "^5.0.12",
+    "@giphy/js-fetch-api": "^5.6.0",
+    "@giphy/react-components": "^9.6.0",
     "@mui/icons-material": "^5.15.15",
     "@mui/material": "latest",
     "@mui/x-data-grid": "^6.19.10",

@@ -10,6 +10,13 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TablePagination from '@mui/material/TablePagination';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
 
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
@@ -38,7 +45,12 @@ export default function SeededUsers() {
   const [isProd, setIsProd] = React.useState(() => {
     const savedEnv = sessionStorage.getItem('isProd');
     return savedEnv !== null ? JSON.parse(savedEnv) : true;
-});
+  });
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [username, setUsername] = React.useState('');
+  const [colleges, setColleges] = React.useState([]);
+  const [selectedCollege, setSelectedCollege] = React.useState('');
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -46,6 +58,54 @@ export default function SeededUsers() {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
+  };
+
+  const handleDialogOpen = () => {
+    setDialogOpen(true);
+    fetch((isProd ? BASE_URL.replace('/user', '') : DEV_BASE_URL.replace('/user', '')) + "/admin/app-data")
+      .then(res => res.json())
+      .then(
+        (result) => {
+          setColleges(result.data.colleges);
+        },
+        (error) => {
+          setError(error);
+        }
+      )
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
+
+  const handleCreateUser = () => {
+    // Handle user creation logic here
+    const userPayload = {
+      username: username,
+      college: selectedCollege
+    };
+
+    fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin/create-seeded-user", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(userPayload)
+    })
+    .then(res => res.json())
+    .then(
+      (result) => {
+        if (result.success) {
+          setRefresh(!refresh);
+        } else {
+          setError(result.message);
+        }
+      },
+      (error) => {
+        setError(error);
+      }
+    );
+    setDialogOpen(false);
   };
 
   React.useEffect(() => {
@@ -168,9 +228,50 @@ export default function SeededUsers() {
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
- <Typography variant="h3" gutterBottom textAlign={'center'}>
-            Seeded users
+      <Typography variant="h3" gutterBottom textAlign={'center'}>
+        Seeded users
       </Typography>
+      <Box display="flex" justifyContent="flex-end">
+        <Button variant="contained" color="primary" onClick={handleDialogOpen}>
+          Create seeded user
+        </Button>
+      </Box>
+      <Dialog open={dialogOpen} onClose={handleDialogClose}>
+        <DialogTitle>Create Seeded User</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Username"
+            type="text"
+            fullWidth
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <TextField
+            select
+            margin="dense"
+            label="College"
+            fullWidth
+            value={selectedCollege}
+            onChange={(e) => setSelectedCollege(e.target.value)}
+          >
+            {colleges.map((college) => (
+              <MenuItem key={college.id} value={college.name}>
+                {college.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleCreateUser} color="primary">
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
       <TableContainer sx={{ maxHeight: 600 }}>
         <Table stickyHeader size="small" aria-label="collapsible table" sx={{ minWidth: 650 }}>
           <TableHead>

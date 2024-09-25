@@ -38,6 +38,7 @@ import Chat from './seededuserchat';
 import Notification from './notification'
 import Dashboard from './dashboard'
 import Threads from './threads'
+import ThreadCreation from './thread_creation'
 const BASE_URL = process.env.REACT_APP_BASEURL;
 const DEV_BASE_URL = process.env.REACT_APP_DEV_BASEURL;
 
@@ -275,7 +276,7 @@ export default function Landing() {
                 </List>
                 <Divider />
                 <List>
-                    {['Chat - Seeded <> Real', 'Broadcast Chat', 'Push Notification', 'Threads'].map((text, index) => (
+                    {['Chat - Seeded <> Real', 'Broadcast Chat', 'Push Notification', 'Threads', 'Thread Creation'].map((text, index) => (
                         <ListItem key={text} disablePadding sx={{ display: 'block' }}>
                                                        <ListItemButton
                                 sx={{
@@ -296,6 +297,7 @@ export default function Landing() {
                                     {index ==1 &&  <SpeakerNotesOutlinedIcon /> }
                                     {index ==2 &&  <CampaignOutlinedIcon /> }
                                     {index ==3 &&  <ForumOutlinedIcon /> }
+                                    {index ==4 &&  <ForumOutlinedIcon /> }
                                 </ListItemIcon>
                                 <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
                             </ListItemButton>
@@ -318,9 +320,16 @@ export default function Landing() {
                 {isProd && page == 'Broadcast Chat' &&<BroadcastChat/>}
                 {isProd && page == 'Push Notification' && <Notification/>}
                 {page == 'Threads' && <Threads/>}
+                {!isProd && page == 'Thread Creation' && <ThreadCreation/>}
+                
                 {!isProd && (page == 'Chat - Seeded <> Real' || page == 'Broadcast Chat' || page == 'Push Notification') && (
                     <Typography variant="h6" color="error">
                         This feature is not available in dev mode.
+                    </Typography>
+                )}
+                {isProd && (page == 'Thread Creation') && (
+                    <Typography variant="h6" color="error">
+                        This feature is not available in prod mode.
                     </Typography>
                 )}
                 {page == '' &&
