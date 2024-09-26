@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, MenuItem, Typography, Grid, InputAdornment, IconButton, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, Snackbar, Alert } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, MenuItem, Typography, Grid, InputAdornment, IconButton, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import Paper from '@mui/material/Paper';
 
 import { GiphyFetch } from '@giphy/js-fetch-api'
 const BASE_URL = process.env.REACT_APP_BASEURL;
@@ -29,6 +28,7 @@ const ThreadCreation = () => {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+    const [threads, setThreads] = useState([]);
 
     useEffect(() => {
         fetch((isProd ? BASE_URL.replace('/user', '') : DEV_BASE_URL.replace('/user', '')) + "/admin/app-data")
@@ -39,6 +39,27 @@ const ThreadCreation = () => {
                 },
                 (error) => {
                     console.error('Error fetching colleges:', error);
+                }
+            );
+        fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/get-admin-thread", {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({})
+        })
+            .then(res => res.json())
+            .then(
+                (result) => {
+                    console.log('Admin thread data:', result);
+                    if (result.status === "OK") {
+                        const sortedThreads = result.data.sort((a, b) => (a.priority || '').localeCompare(b.priority || ''));
+                        setThreads(sortedThreads);
+                    }
+                },
+                (error) => {
+                    console.error('Error fetching admin thread:', error);
                 }
             );
     }, []);
@@ -385,6 +406,46 @@ const ThreadCreation = () => {
                     {snackbarMessage}
                 </Alert>
             </Snackbar>
+            <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Thread ID</TableCell>
+                            <TableCell>User ID</TableCell>
+                            <TableCell>Priority</TableCell>
+                            <TableCell>Group</TableCell>
+                            <TableCell>Media</TableCell>
+                            <TableCell>Text</TableCell>
+                            <TableCell>Link</TableCell>
+                            <TableCell>Created By</TableCell>
+                            <TableCell>Created At</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {threads.map((thread) => (
+                            <TableRow key={thread._id}>
+                                <TableCell>{thread.threadId}</TableCell>
+                                <TableCell>{thread.userId}</TableCell>
+                                <TableCell>{thread.priority}</TableCell>
+                                <TableCell>{thread.group}</TableCell>
+                                <TableCell>
+                                    {thread.data.customData.media && (
+                                        <img src={thread.data.customData.media} alt="media" style={{ width: '100px' }} />
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    <Typography style={{ whiteSpace: 'pre-wrap' }}>
+                                        {thread.data.customData.text}
+                                    </Typography>
+                                </TableCell>
+                                <TableCell>{thread.data.customData.link}</TableCell>
+                                <TableCell>{thread.createdBy}</TableCell>
+                                <TableCell>{new Date(thread.createdAt).toLocaleString()}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </Paper>
     );
 };
