@@ -27,6 +27,7 @@ import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import InsightsIcon from '@mui/icons-material/Insights';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
+import SmsFailedOutlinedIcon from '@mui/icons-material/SmsFailedOutlined';
 import Logo from '../logo.png'
 import DemoUsers from './demousers';
 import SeededUsers from './seededusers';
@@ -244,7 +245,7 @@ export default function Landing() {
                 </DrawerHeader>
                 <Divider />
                 <List>
-                    {['Dashboard','Verification', 'Seeded Users', 'Cool Profiles','Super Users', 'Interests'].map((text, index) => (
+                    {['Dashboard','Verification', 'Seeded Users'].map((text, index) => (
                         <ListItem key={text} disablePadding sx={{ display: 'block' }}>
                             <ListItemButton
                                 sx={{
@@ -264,10 +265,6 @@ export default function Landing() {
                                     {index ==0 && <InsightsIcon/>}
                                     {index ==1 &&  <HowToRegOutlinedIcon /> }
                                     {index ==2 &&  <RecentActorsOutlinedIcon /> }
-                                    {index ==3 &&  <SettingsAccessibilityOutlinedIcon /> }
-                                    {index ==4 &&  <AdminPanelSettingsOutlinedIcon /> }
-                                    {index ==5 &&  <InterestsOutlinedIcon /> }
-
                                 </ListItemIcon>
                                 <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
                             </ListItemButton>
@@ -276,7 +273,7 @@ export default function Landing() {
                 </List>
                 <Divider />
                 <List>
-                    {['Chat - Seeded <> Real', 'Broadcast Chat', 'Push Notification', 'Threads', 'Thread Creation'].map((text, index) => (
+                    {['Chat - Seeded <> Real', 'Broadcast Chat', 'Push Notification', 'Reported Threads', 'Thread Creation'].map((text, index) => (
                         <ListItem key={text} disablePadding sx={{ display: 'block' }}>
                                                        <ListItemButton
                                 sx={{
@@ -296,7 +293,7 @@ export default function Landing() {
                                     {index ==0 &&  <ThreePOutlinedIcon /> }
                                     {index ==1 &&  <SpeakerNotesOutlinedIcon /> }
                                     {index ==2 &&  <CampaignOutlinedIcon /> }
-                                    {index ==3 &&  <ForumOutlinedIcon /> }
+                                    {index ==3 &&  <SmsFailedOutlinedIcon /> }
                                     {index ==4 &&  <ForumOutlinedIcon /> }
                                 </ListItemIcon>
                                 <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
@@ -313,13 +310,10 @@ export default function Landing() {
 
                 {page == 'Verification' && <Verification />}
                 {page == 'Seeded Users' && <SeededUsers />}
-                {page == 'Super Users' && <SuperUsers />}
-                {page == 'Interests' && <Interests />}
-                {page == 'Cool Profiles' && <DemoUsers />}
                 {isProd && page == 'Chat - Seeded <> Real' && <Chat />}
                 {isProd && page == 'Broadcast Chat' &&<BroadcastChat/>}
                 {isProd && page == 'Push Notification' && <Notification/>}
-                {page == 'Threads' && <Threads/>}
+                {page == 'Reported Threads' && <Threads/>}
                 {!isProd && page == 'Thread Creation' && <ThreadCreation/>}
                 
                 {!isProd && (page == 'Chat - Seeded <> Real' || page == 'Broadcast Chat' || page == 'Push Notification') && (

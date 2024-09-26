@@ -52,6 +52,7 @@ export default function Verification(props) {
     return savedEnv !== null ? JSON.parse(savedEnv) : true;
   });
   const [tabValue, setTabValue] = React.useState(0);
+  const [expandedRow, setExpandedRow] = React.useState(null);
 
   const handleClose = () => {
     setOpenReject(false);
@@ -115,20 +116,13 @@ export default function Verification(props) {
     };
   }
   function openRow(user_id) {
-    for (let data in items) {
-      if (items[data].user_id == user_id) {
-        items[data].open = !items[data].open
-      }
-
-    }
-    console.log(items)
-    setItems(items)
-    setRerender(!rerender)
+    setExpandedRow(prev => (prev === user_id ? null : user_id));
   }
 
   function Row(row) {
     console.log(row)
     row = row.row
+    const isOpen = expandedRow === row.user_id;
     console.log((row.image_urls && row.image_urls[0] !== null))
     return (
       <React.Fragment>
@@ -139,7 +133,7 @@ export default function Verification(props) {
               size="small"
               onClick={() => openRow(row.user_id)}
             >
-              {row.open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+              {isOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
             </IconButton>
           </TableCell>
           <TableCell component="th" scope="row">
@@ -164,30 +158,32 @@ export default function Verification(props) {
             </TableCell>
           )}
           <TableCell align="center">{row.verified ? 'true' : 'false'}</TableCell>
-          <TableCell align="center">
-            <ToggleButtonGroup
-              variant="contained"
-              color="primary"
-              size="small"
-              value={row?.logs?.length < 1 ? 'null' : (row.verified ? 'approve' : 'reject')}
-              exclusive
-              onChange={(event) => handleChange(event, row)}
-              aria-label="approval"
-            >
-              <ToggleButton color="error" value="reject">reject</ToggleButton>
-              <ToggleButton color="success" value="approve">approve</ToggleButton>
-            </ToggleButtonGroup>
-          </TableCell>
-
+          {tabValue === 0 && (
+            <TableCell align="center">
+              <ToggleButtonGroup
+                variant="contained"
+                color="primary"
+                size="small"
+                value={row?.logs?.length < 1 ? 'null' : (row.verified ? 'approve' : 'reject')}
+                exclusive
+                onChange={(event) => handleChange(event, row)}
+                aria-label="approval"
+              >
+                <ToggleButton color="error" value="reject">reject</ToggleButton>
+                <ToggleButton color="success" value="approve">approve</ToggleButton>
+              </ToggleButtonGroup>
+            </TableCell>
+          )}
         </TableRow>
         <TableRow sx={{ '& > *': { border: 0 } }} >
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={12}>
-            <Collapse in={row.open} timeout="auto" unmountOnExit>
+            <Collapse in={isOpen} timeout="auto" unmountOnExit>
+              { tabValue === 0 &&
               <Box sx={{ margin: 1 }} align='center'>
 
 
                 <img
-                  width={300}
+                 // width={300}
                   height={300}
                   src={row.img_url}
                   onClick={() => setOpenImageModal(true)}
@@ -231,14 +227,15 @@ export default function Verification(props) {
                   ))}
                 </ImageList> */}
               </Box>
+  }
             </Collapse>
           </TableCell>
         </TableRow>
-        {row.logs.length > 0 &&
+        {row.logs.length > 0  &&
           <TableRow>
 
             <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={12}>
-              <Collapse in={row.open} timeout="auto" unmountOnExit>
+              <Collapse in={isOpen} timeout="auto" unmountOnExit>
 
                 <Table size="small" aria-label="purchases">
                   <TableHead>
@@ -253,7 +250,7 @@ export default function Verification(props) {
                   </TableHead>
                   <TableBody>
                     {row.logs.map((historyRow) => (
-                      <TableRow key={historyRow.date}>
+                      <TableRow key={historyRow.created_at}>
                         <TableCell component="th" scope="row">
                           {historyRow.notes.split(':')[0]}
                         </TableCell>
@@ -359,7 +356,7 @@ export default function Verification(props) {
                     <TableCell align="center">Attempts</TableCell>
                     {tabValue === 0 && <TableCell align="center">ID image</TableCell>}
                     <TableCell align="center">Verified</TableCell>
-                    <TableCell align="center">Action</TableCell>
+                    {tabValue === 0 && <TableCell align="center">Action</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>
