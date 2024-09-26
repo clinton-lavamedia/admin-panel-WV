@@ -74,6 +74,7 @@ const ThreadCreation = () => {
     };
 
     const handleCreateThread = () => {
+        const token = localStorage.getItem("token");
         // Handle thread creation logic here
         if (image) {
             const generateRandomFilename = () => {
@@ -173,7 +174,9 @@ const ThreadCreation = () => {
                 group: selectedCollege,
                 tags: [],
                 parentId: null
-            }
+            },
+            priority: priority,
+            createdBy:token
         };
 
         console.log('thread body >> ', JSON.stringify(threadBody));
