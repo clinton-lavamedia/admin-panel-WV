@@ -75,7 +75,7 @@ export default function Verification(props) {
       attempts: row.attempts + 1,
       verified: event.target.value == 'approve' ? true : false,
       admin_id: admin_id,
-      notes: { img: row.img_url, admin_id: token }
+      notes: token + ': ' + notes
     }
     if (event.target.value == 'reject') {
       setPayload(payload);
@@ -149,7 +149,7 @@ export default function Verification(props) {
 
           {/* <TableCell align="center">{row.first_name + ' '+ row.last_name}</TableCell> */}
           <TableCell align="center">{row.attempts}</TableCell>
-          {tabValue === 0 && (
+          {tabValue == 0 && (
             <TableCell align="center">
               <Avatar alt="id_img"
                 variant="square"
@@ -157,14 +157,14 @@ export default function Verification(props) {
                 src={row.img_url} />
             </TableCell>
           )}
-          <TableCell align="center">{row.verified ? 'true' : 'false'}</TableCell>
+          <TableCell align="center">{row.is_verified ? 'true' : 'false'}</TableCell>
           {tabValue === 0 && (
             <TableCell align="center">
               <ToggleButtonGroup
                 variant="contained"
                 color="primary"
                 size="small"
-                value={row?.logs?.length < 1 ? 'null' : (row.verified ? 'approve' : 'reject')}
+                value={row?.logs?.length < 1 ? 'null' : (row.is_verified ? 'approve' : 'reject')}
                 exclusive
                 onChange={(event) => handleChange(event, row)}
                 aria-label="approval"
@@ -329,9 +329,11 @@ export default function Verification(props) {
 
   const filteredItems = items.filter(item => {
     if (tabValue === 0) {
-      return item.img_url;
+      return item.img_url && !item.is_verified;
+    } else if (tabValue === 1) {
+      return !item.img_url && !item.is_verified;
     } else {
-      return !item.img_url;
+      return item.is_verified;
     }
   });
 
@@ -340,6 +342,7 @@ export default function Verification(props) {
       <Tabs value={tabValue} onChange={handleTabChange} aria-label="verification tabs">
         <Tab label="Pending" />
         <Tab label="Rejected" />
+        <Tab label="Verified" />
       </Tabs>
       <div>
         {isLoaded &&
@@ -354,7 +357,7 @@ export default function Verification(props) {
                     <TableCell align="center">Avatar</TableCell>
                     <TableCell align="center">Phone</TableCell>
                     <TableCell align="center">Attempts</TableCell>
-                    {tabValue === 0 && <TableCell align="center">ID image</TableCell>}
+                    {tabValue == 0 && <TableCell align="center">ID image</TableCell>}
                     <TableCell align="center">Verified</TableCell>
                     {tabValue === 0 && <TableCell align="center">Action</TableCell>}
                   </TableRow>
