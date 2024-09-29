@@ -94,9 +94,10 @@ const ThreadCreation = () => {
         setImage(event.target.files[0]);
     };
 
-    const handleCreateThread = () => {
+    const handleCreateThread = async () => {
         const token = localStorage.getItem("token");
-        // Handle thread creation logic here
+        let uploadedImageUrl = null;
+
         if (image) {
             const generateRandomFilename = () => {
                 const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -112,74 +113,68 @@ const ThreadCreation = () => {
                 filename: randomFilename
             };
 
-            fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-threads-upload-url", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            })
-                .then(res => res.json())
-                .then(
-                    async (result) => {
-                        if (result.status === "OK") {
-                            const signedUrl = result.data.signedUrl;
-                            try {
-                                // Compress the image
-                                const canvas = document.createElement('canvas');
-                                const ctx = canvas.getContext('2d');
-                                const img = new Image();
-                                img.src = URL.createObjectURL(image);
-                                await new Promise((resolve) => {
-                                    img.onload = () => {
-                                        const aspectRatio = img.width / img.height;
-                                        canvas.width = 720;
-                                        canvas.height = 720 / aspectRatio;
-                                        if (canvas.height < 200) {
-                                            canvas.height = 200;
-                                            canvas.width = 200 * aspectRatio;
-                                        }
-                                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                                        resolve();
-                                    };
-                                });
-                                const compressedImage = await new Promise((resolve) => {
-                                    canvas.toBlob((blob) => {
-                                        resolve(blob);
-                                    }, 'image/png', 0.9); // Adjust the quality as needed
-                                });
-
-                                await fetch(signedUrl, {
-                                    method: 'PUT',
-                                    body: compressedImage,
-                                    headers: {
-                                        'Content-Type': 'image/png'
-                                    }
-                                });
-                                console.log('Image upload to S3 successful');
-                                image = signedUrl.split('?')[0]; // Update image with the URL without query parameters
-                            } catch (err) {
-                                console.error('Failed to push image to S3. Please try again.', err);
-                            }
-                        } else {
-                            console.error('Error getting signed URL:', result);
-                        }
+            try {
+                const response = await fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-threads-upload-url", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
                     },
-                    (error) => {
-                        console.error('Error uploading image:', error);
-                    }
-                );
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.status === "OK") {
+                    const signedUrl = result.data.signedUrl;
+                    // Compress the image
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.src = URL.createObjectURL(image);
+                    await new Promise((resolve) => {
+                        img.onload = () => {
+                            const aspectRatio = img.width / img.height;
+                            canvas.width = 720;
+                            canvas.height = 720 / aspectRatio;
+                            if (canvas.height < 200) {
+                                canvas.height = 200;
+                                canvas.width = 200 * aspectRatio;
+                            }
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            resolve();
+                        };
+                    });
+                    const compressedImage = await new Promise((resolve) => {
+                        canvas.toBlob((blob) => {
+                            resolve(blob);
+                        }, 'image/png', 0.9); // Adjust the quality as needed
+                    });
+
+                    await fetch(signedUrl, {
+                        method: 'PUT',
+                        body: compressedImage,
+                        headers: {
+                            'Content-Type': 'image/png'
+                        }
+                    });
+                    console.log('Image upload to S3 successful');
+                    uploadedImageUrl = signedUrl.split('?')[0]; // Update image with the URL without query parameters
+                } else {
+                    console.error('Error getting signed URL:', result);
+                    setSnackbarMessage('Error uploading image');
+                    setSnackbarSeverity('error');
+                    setSnackbarOpen(true);
+                    return; // Exit the function if image upload fails
+                }
+            } catch (err) {
+                console.error('Failed to push image to S3. Please try again.', err);
+                setSnackbarMessage('Error uploading image');
+                setSnackbarSeverity('error');
+                setSnackbarOpen(true);
+                return; // Exit the function if image upload fails
+            }
         }
-       /*  const threadPayload = {
-            college: selectedCollege,
-            user: selectedUser,
-            text: text,
-            image: image,
-            giphy: giphy,
-            url: url,
-            priority: priority
-        }; */
-          const threadBody = {
+      
+        const threadBody = {
             userId: 'seeded_'+selectedUser,
             user_post:
             {
@@ -187,7 +182,7 @@ const ThreadCreation = () => {
                 type: "custom",
                 payload: {
                     text: text,
-                    media: giphy.split('?')[0] || image,
+                    media: giphy.split('?')[0] || uploadedImageUrl,
                     gif: giphy.split('?')[0] || null,
                     link: url,
                     tag: "" 
@@ -201,15 +196,15 @@ const ThreadCreation = () => {
         };
 
         console.log('thread body >> ', JSON.stringify(threadBody));
-        fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-create-threads", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(threadBody)
-        })
-        .then(response => response.json())
-        .then(data => {
+        try {
+            const response = await fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-create-threads", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(threadBody)
+            });
+            const data = await response.json();
             console.log('Thread creation successful:', data);
             setSnackbarMessage('Thread creation successful');
             setSnackbarSeverity('success');
@@ -223,13 +218,12 @@ const ThreadCreation = () => {
             setUrl('');
             setPriority('');
             setMediaType('image');
-        })
-        .catch((error) => {
+        } catch (error) {
             console.error('Error creating thread:', error);
             setSnackbarMessage('Error creating thread');
             setSnackbarSeverity('error');
             setSnackbarOpen(true);
-        });
+        }
 
         setDialogOpen(false);
     };
