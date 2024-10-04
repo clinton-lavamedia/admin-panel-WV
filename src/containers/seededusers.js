@@ -1,8 +1,6 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
-import Collapse from '@mui/material/Collapse';
-import IconButton from '@mui/material/IconButton';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -17,13 +15,8 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
-
-import ImageList from '@mui/material/ImageList';
-import ImageListItem from '@mui/material/ImageListItem';
 import Avatar from '@mui/material/Avatar';
 import Paper from '@mui/material/Paper';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Typography from '@mui/material/Typography';
 
 const BASE_URL = process.env.REACT_APP_BASEURL;
@@ -33,13 +26,7 @@ export default function SeededUsers() {
   const [error, setError] = React.useState(null);
   const [isLoaded, setIsLoaded] = React.useState(false);
   const [items, setItems] = React.useState([]);
-  const [open, setOpen] = React.useState(false);
-  const [approve, setApproval] = React.useState('reject');
   const [refresh, setRefresh] = React.useState(false);
-  const [openReject, setOpenReject] = React.useState(false);
-  const [payload, setPayload] = React.useState({});
-  const [notes, setNotes] = React.useState('');
-  const [rerender, setRerender] = React.useState(false);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
   const [isProd, setIsProd] = React.useState(() => {
@@ -50,6 +37,8 @@ export default function SeededUsers() {
   const [username, setUsername] = React.useState('');
   const [colleges, setColleges] = React.useState([]);
   const [selectedCollege, setSelectedCollege] = React.useState('');
+  const [collegeDialogOpen, setCollegeDialogOpen] = React.useState(false);
+  const [profileImage, setProfileImage] = React.useState(null);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -79,7 +68,6 @@ export default function SeededUsers() {
   };
 
   const handleCreateUser = () => {
-    // Handle user creation logic here
     const userPayload = {
       username: username,
       college: selectedCollege
@@ -108,6 +96,131 @@ export default function SeededUsers() {
     setDialogOpen(false);
   };
 
+  const handleCollegeDialogOpen = () => {
+    fetch((isProd ? BASE_URL.replace('/user', '') : DEV_BASE_URL.replace('/user', '')) + "/admin/app-data")
+      .then(res => res.json())
+      .then(
+        (result) => {
+          setColleges(result.data.colleges);
+        },
+        (error) => {
+          setError(error);
+        }
+      )
+      setCollegeDialogOpen(true);
+  };
+
+  const handleCollegeDialogClose = () => {
+    setCollegeDialogOpen(false);
+  };
+
+  const handleCreateCollege = async () => {
+    let uploadedImageUrl = null;
+
+    if (profileImage) {
+      const generateRandomFilename = () => {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let filename = '';
+        for (let i = 0; i < 10; i++) {
+          filename += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return 'seeded-colleges/' + filename + '.png';
+      };
+
+      const randomFilename = generateRandomFilename();
+      const payload = {
+        filename: randomFilename,
+        bucket: 'heyo-public-assets'
+      };
+
+      try {
+        const response = await fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-threads-upload-url", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.status === "OK") {
+          const signedUrl = result.data.signedUrl;
+          // Compress the image
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const img = new Image();
+          img.src = URL.createObjectURL(profileImage);
+          await new Promise((resolve) => {
+            img.onload = () => {
+              const aspectRatio = img.width / img.height;
+              canvas.width = 720;
+              canvas.height = 720 / aspectRatio;
+              if (canvas.height < 200) {
+                canvas.height = 200;
+                canvas.width = 200 * aspectRatio;
+              }
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              resolve();
+            };
+          });
+          const compressedImage = await new Promise((resolve) => {
+            canvas.toBlob((blob) => {
+              resolve(blob);
+            }, 'image/png', 0.9); // Adjust the quality as needed
+          });
+
+          await fetch(signedUrl, {
+            method: 'PUT',
+            body: compressedImage,
+            headers: {
+              'Content-Type': 'image/png'
+            }
+          });
+          console.log('Image upload to S3 successful');
+          uploadedImageUrl = signedUrl.split('?')[0]; // Update image with the URL without query parameters
+
+          const userPayload = {
+            username: username,
+            college: selectedCollege,
+            profileImage: uploadedImageUrl
+          };
+         
+      
+          fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin/create-seeded-user", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userPayload)
+          })
+          .then(res => res.json())
+          .then(
+            (result) => {
+              if (result.success) {
+                setRefresh(!refresh);
+              } else {
+                setError(result.message);
+              }
+            },
+            (error) => {
+              setError(error);
+            }
+          );
+        } else {
+          console.error('Error getting signed URL:', result);
+          setError('Error uploading image');
+          return; // Exit the function if image upload fails
+        }
+      } catch (err) {
+        console.error('Failed to push image to S3. Please try again.', err);
+        setError('Error uploading image');
+        return; // Exit the function if image upload fails
+      }
+    }
+    
+    setCollegeDialogOpen(false);
+  };
+
   React.useEffect(() => {
     fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-get-seeded-users")
       .then(res => res.json())
@@ -115,10 +228,7 @@ export default function SeededUsers() {
         (result) => {
           setIsLoaded(true);
           let data = result.data.user;
-          for (let key in data) {
-            data[key].open = false
-            console.log(data)
-          }
+          data = data.filter(user => !user.course_id || user.course_id.length === 0);
           setItems(data);
         },
         (error) => {
@@ -127,111 +237,13 @@ export default function SeededUsers() {
         }
       )
   }, [refresh])
-  function openRow(user_id) {
-    for (let data in items) {
-      if (items[data].id == user_id) {
-        items[data].open = !items[data].open
-      }
-
-    }
-    console.log(items)
-    setItems(items)
-    setRerender(!rerender)
-  }
-  function Row(row) {
-    console.log(row)
-    row = row.row
-    function srcset(image, size, rows = 1, cols = 1) {
-      return {
-        src: `${image}?w=${size * cols}&h=${size * rows}&fit=crop&auto=format`,
-        srcSet: `${image}?w=${size * cols}&h=${size * rows
-          }&fit=crop&auto=format&dpr=2 2x`,
-      };
-    }
-    return (
-      <React.Fragment>
-        <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
-          <TableCell>
-            <IconButton
-              aria-label="expand row"
-              size="small"
-              onClick={() => openRow(row.id)}
-            >
-              {row.open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-            </IconButton>
-          </TableCell>
-          <TableCell component="th" scope="row">
-            {row.id}
-          </TableCell>
-          <TableCell align="center">{row.username}</TableCell>
-          <TableCell align="center">{row.first_name}</TableCell>
-          <TableCell align="center">{row.last_name}</TableCell>
-          <TableCell align="center">{row.age}</TableCell>
-          <TableCell align="center">{row.gender}</TableCell>
-          <TableCell align="right">{row.strapi_id}</TableCell>
-          <TableCell align="center">{row.country_code}</TableCell>
-          <TableCell align="center">{row.degree}</TableCell>
-          <TableCell align="center">{row.course_year}</TableCell>
-          <TableCell align="center">{row.college_id}</TableCell>
-          <TableCell align="center">{row.course_id}</TableCell>
-
-        </TableRow>
-        <TableRow>
-          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-            <Collapse in={row.open} timeout="auto" unmountOnExit>
-              <Box sx={{ margin: 1 }}>
-                <Table size="small" aria-label="purchases">
-                  <TableHead>
-                    <TableRow >
-
-                      <ImageList
-                        variant="quilted"
-                        cols={4}
-                        rowHeight={200}
-                      >
-                        {row.images?.map((item) => (
-                          <ImageListItem key={item.id} cols={item.cols || 1} rows={item.rows || 1}>
-                            <img
-                              {...srcset(item.image_url, 200, item.rows, item.cols)}
-                              alt={item.title}
-                              loading="lazy"
-                            />
-                          </ImageListItem>
-                        ))}
-                      </ImageList>
-
-
-                    </TableRow>
-
-                    <TableRow>
-                      <TableCell>Interests</TableCell>
-
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {row?.interests?.map((row) => (
-                      <TableRow key={row.id}>{row.subtopic} </TableRow>
-                    ))}
-                    <TableRow key={row.id}>
-
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </Box>
-            </Collapse>
-          </TableCell>
-        </TableRow>
-      </React.Fragment>
-    );
-  }
-
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      <Typography variant="h3" gutterBottom textAlign={'center'}>
-        Seeded users
-      </Typography>
-      <Box display="flex" justifyContent="flex-end">
+      <Box display="flex" justifyContent="space-between">
+        <Button variant="contained" color="primary" onClick={handleCollegeDialogOpen}>
+          Create seeded college
+        </Button>
         <Button variant="contained" color="primary" onClick={handleDialogOpen}>
           Create seeded user
         </Button>
@@ -272,29 +284,77 @@ export default function SeededUsers() {
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog open={collegeDialogOpen} onClose={handleCollegeDialogClose}>
+        <DialogTitle>Create Seeded College</DialogTitle>
+        <DialogContent>
+        <TextField
+            autoFocus
+            margin="dense"
+            label="Username (typically college/brand name)"
+            type="text"
+            fullWidth
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <TextField
+            select
+            margin="dense"
+            label="College (thread group name)"
+            fullWidth
+            value={selectedCollege}
+            onChange={(e) => setSelectedCollege(e.target.value)}
+          >
+            {colleges.map((college) => (
+              <MenuItem key={college.id} value={college.name}>
+                {college.name}
+              </MenuItem>
+            ))}
+          </TextField>
+          <input
+            accept="image/*"
+            style={{ display: 'none' }}
+            id="raised-button-file"
+            type="file"
+            onChange={(e) => setProfileImage(e.target.files[0])}
+          />
+          <label htmlFor="raised-button-file">
+            <Button variant="contained" component="span">
+              Upload Profile Image
+            </Button>
+          </label>
+          {profileImage && <Typography variant="body2">{profileImage.name}</Typography>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCollegeDialogClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleCreateCollege} color="primary">
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
       <TableContainer sx={{ maxHeight: 600 }}>
-        <Table stickyHeader size="small" aria-label="collapsible table" sx={{ minWidth: 650 }}>
+        <Table stickyHeader size="small" aria-label="seeded users table" sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
-              <TableCell />
+              <TableCell>Profile Image</TableCell>
               <TableCell>DB ID</TableCell>
               <TableCell align="center">Username</TableCell>
-              <TableCell align="center">First name</TableCell>
-              <TableCell align="center">Last name</TableCell>
-              <TableCell align="center">Age</TableCell>
-              <TableCell align="center">Gender</TableCell>
-              <TableCell align="center">Strapi ID</TableCell>
-              <TableCell align="center">Country Code</TableCell>
-              <TableCell align="center">Degree</TableCell>
-              <TableCell align="center">Year</TableCell>
               <TableCell align="center">College</TableCell>
-              <TableCell align="center">Course</TableCell>
-
             </TableRow>
           </TableHead>
           <TableBody>
             {items.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
-              <Row key={row.name} row={row} />
+              <TableRow key={row.id}>
+                <TableCell>
+                  <Avatar src={row.images && row.images[0] ? row.images[0].image_url : ''} />
+                </TableCell>
+                <TableCell component="th" scope="row">
+                  {row.id}
+                </TableCell>
+                <TableCell align="center">{row.username}</TableCell>
+                <TableCell align="center">{row.college_id}</TableCell>
+              </TableRow>
             ))}
           </TableBody>
         </Table>

@@ -52,10 +52,13 @@ const Threads = () => {
         const threadToDelete = threads.find((thread) => thread.msgId === msgId);
         const deletedBy = user; // Replace with the actual logged-in user's email
         const userId = threadToDelete?.details?.sender?.uid;
-        const id=threadToDelete?._id;
+        const id = threadToDelete?._id;
         const reportedAt = threadToDelete?.reportedAt;
-        
-        const type = threadToDelete?.details?.metadata ? 'thread' : 'comment';
+        const reportedBy = threadToDelete?.reportedBy;
+        const type = threadToDelete?.details?.parentMessageId ? 'comment' : 'thread';
+        const threadDetails = threadToDelete?.details;
+        const customData = threadToDelete?.details?.customData;
+        const metadata = threadToDelete?.details?.metadata;      
 
         try {
             await fetch((isProd ? BASE_URL : DEV_BASE_URL) + `/threads/delete-reported-threads`, {
@@ -63,7 +66,7 @@ const Threads = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({id, msgId, deletedBy, userId, type,reportedAt }),
+                body: JSON.stringify({id, msgId, deletedBy, userId, type, reportedAt, reportedBy, threadDetails, customData, metadata}),
             });
             setThreads((prevThreads) => prevThreads.filter((thread) => thread.msgId !== msgId));
         } catch (error) {
@@ -95,16 +98,14 @@ const Threads = () => {
 
     return (
         <Box sx={{ p: 3, width: '100%' }}>
-            <Typography variant="h4" gutterBottom>
-                Reported Threads
-            </Typography>
+           
             {sortedThreadIds.length === 0 ? (
                 <Typography variant="body1" color="textSecondary">
                     No reported threads available.
                 </Typography>
             ) : (
                 sortedThreadIds.map((msgId) => (
-                    <Accordion key={msgId} expanded={expanded === msgId && !groupedThreads[msgId].deletedAt} onChange={() => handleAccordionChange(msgId)}>
+                    <Accordion key={msgId} expanded={expanded === msgId} onChange={() => handleAccordionChange(msgId)}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Grid container spacing={1} alignItems="center">
                                 <Grid item xs={12} sm={4}>
@@ -143,8 +144,47 @@ const Threads = () => {
                                 </Grid>
                                 {groupedThreads[msgId].reports.length > 0 && (
                                     <Box sx={{ mt: 2 }}>
-                                        {groupedThreads[msgId].reports[0].details?.deletedAt ? (
-                                            <Typography variant="body2" color="error">{`Message was deleted at ${new Date(groupedThreads[msgId].reports[0].details.deletedAt * 1000).toLocaleString()}`}</Typography>
+                                        {groupedThreads[msgId].deletedAt ? (
+                                            <>
+                                                <Typography variant="body2">{`Group ID: ${groupedThreads[msgId].reports[0].groupId}`}</Typography>
+                                                <Typography variant="body2">{`Tag: ${groupedThreads[msgId].reports[0].tag}`}</Typography>
+                                                <Typography variant="body2">{`Reported By: ${groupedThreads[msgId].reports[0].reportedBy}`}</Typography>
+                                                <Typography variant="body2">{`Reported At: ${new Date(groupedThreads[msgId].reports[0].reportedAt).toLocaleString()}`}</Typography>
+                                                <Typography variant="body2">{`Reason: ${groupedThreads[msgId].reports[0].reason}`}</Typography>
+                                                {groupedThreads[msgId].reports[0].customData && (
+                                                    <>
+                                                        {groupedThreads[msgId].reports[0].customData.text && (
+                                                            <Typography variant="body2">{`Text: ${groupedThreads[msgId].reports[0].customData.text}`}</Typography>
+                                                        )}
+                                                        {groupedThreads[msgId].reports[0].customData.tag && (
+                                                            <Typography variant="body2">{`Tag: ${groupedThreads[msgId].reports[0].customData.tag}`}</Typography>
+                                                        )}
+                                                        {groupedThreads[msgId].reports[0].customData.link && (
+                                                            <Typography variant="body2">
+                                                                Link: <a href={groupedThreads[msgId].reports[0].customData.link} target="_blank" rel="noopener noreferrer">
+                                                                    {groupedThreads[msgId].reports[0].customData.link}
+                                                                </a>
+                                                            </Typography>
+                                                        )}
+                                                       {/*  {groupedThreads[msgId].reports[0].customData.gif && (
+                                                            <Box mt={1}>
+                                                                <Typography variant="body2">GIF:</Typography>
+                                                                <img src={groupedThreads[msgId].reports[0].customData.gif} alt="GIF" style={{ maxWidth: '100%', maxHeight: '200px' }} />
+                                                            </Box>
+                                                        )} */}
+                                                        {groupedThreads[msgId].reports[0].customData.media && (
+                                                            <Box mt={1}>
+                                                                <Typography variant="body2">Media:</Typography>
+                                                                <img src={groupedThreads[msgId].reports[0].customData.media} alt="Media" style={{ maxWidth: '100%', maxHeight: '200px' }} />
+                                                            </Box>
+                                                        )}
+                                                    </>
+                                                )}
+                                                <Typography variant="body2">{`Deleted At: ${new Date(groupedThreads[msgId].reports[0].deletedAt).toLocaleString()}`}</Typography>
+                                                <Typography variant="body2">{`Deleted By: ${groupedThreads[msgId].reports[0].deletedBy}`}</Typography>
+                                                <Typography variant="body2">{`Type: ${groupedThreads[msgId].reports[0].type}`}</Typography>
+                                                <Typography variant="body2">{`Created by: ${groupedThreads[msgId].reports[0].userId}`}</Typography>
+                                            </>
                                         ) : groupedThreads[msgId].reports[0].details?.id ? (
                                             <>
                                                 <Grid container spacing={1} alignItems="center">
@@ -152,29 +192,26 @@ const Threads = () => {
                                                         <Avatar src={groupedThreads[msgId].reports[0].details.sender.avatar} alt={groupedThreads[msgId].reports[0].details.sender.name} />
                                                     </Grid>
                                                     <Grid item>
-                                                        <Typography variant="body2">{`Sender: ${groupedThreads[msgId].reports[0].details.sender.name} (UID: ${groupedThreads[msgId].reports[0].details.sender.uid})`}</Typography>
+                                                        <Typography variant="body2">{`Created by: ${groupedThreads[msgId].reports[0].details.sender.name} (UID: ${groupedThreads[msgId].reports[0].details.sender.uid})`}</Typography>
                                                         <Typography variant="body2">{`Last Active At: ${new Date(groupedThreads[msgId].reports[0].details.sender.lastActiveAt * 1000).toLocaleString()}`}</Typography>
                                                     </Grid>
                                                 </Grid>
                                                 <Typography variant="body2">{`Message: ${groupedThreads[msgId].reports[0].details.customData?.text || groupedThreads[msgId].reports[0].details.metadata?.text || 'No text available'}`}</Typography>
-                                               {/*  {groupedThreads[msgId].reports[0].details.customData?.gif && (
-                                                    <img src={groupedThreads[msgId].reports[0].details.customData.gif} alt="custom data gif" style={{ maxWidth: '100%' }} />
-                                                )}
-                                                {groupedThreads[msgId].reports[0].details.customData?.link && (
-                                                    <img src={groupedThreads[msgId].reports[0].details.customData.link} alt="custom data link" style={{ maxWidth: '100%' }} />
-                                                )} */}
+                                                <Typography variant="body2">{`Tag: ${groupedThreads[msgId].reports[0].details.customData?.tag || 'No tag available'}`}</Typography>
                                                 {groupedThreads[msgId].reports[0].details.customData?.media && (
                                                     <img src={groupedThreads[msgId].reports[0].details.customData.media} alt="custom data media" style={{ maxWidth: '100%' }} />
                                                 )}
                                                 {groupedThreads[msgId].reports[0].details.metadata?.gif && (
                                                     <img src={groupedThreads[msgId].reports[0].details.metadata.gif} alt="metadata gif" style={{ maxWidth: '100%' }} />
                                                 )}
-                                               {/*  {groupedThreads[msgId].reports[0].details.metadata?.link && (
-                                                    <img src={groupedThreads[msgId].reports[0].details.metadata.link} alt="metadata link" style={{ maxWidth: '100%' }} />
+                                                {groupedThreads[msgId].reports[0].details.metadata?.link && (
+                                                    <a href={groupedThreads[msgId].reports[0].details.metadata.link} target="_blank" rel="noopener noreferrer">
+                                                        {groupedThreads[msgId].reports[0].details.metadata.link}
+                                                    </a>
                                                 )}
                                                 {groupedThreads[msgId].reports[0].details.metadata?.media && (
                                                     <img src={groupedThreads[msgId].reports[0].details.metadata.media} alt="metadata media" style={{ maxWidth: '100%' }} />
-                                                )} */}
+                                                )}
                                                  <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                                             <IconButton onClick={() => handleDelete(msgId)} aria-label="delete" sx={{ color: 'red' }}>
                                                 <DeleteIcon />
@@ -197,4 +234,3 @@ const Threads = () => {
 };
 
 export default Threads;
-

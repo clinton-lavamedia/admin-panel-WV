@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, MenuItem, Typography, Grid, InputAdornment, IconButton, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, MenuItem, Typography, Grid, InputAdornment, IconButton, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 
 import { GiphyFetch } from '@giphy/js-fetch-api'
@@ -29,6 +29,17 @@ const ThreadCreation = () => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
     const [threads, setThreads] = useState([]);
+    const [selectedTag, setSelectedTag] = useState(null);
+
+    const tags = [
+        {'label': 'Confession', 'color': '#EF9EFF', 'borderColor': '#D400FF', 'id': 0},
+        {'label': 'Meme', 'color': '#92FFF6', 'borderColor': '#00D4C2', 'id': 1},
+        {'label': 'Crush', 'color': '#FFA5C9', 'borderColor': '#EC005F', 'id': 2},
+        {'label': 'Event', 'color': '#FDFF9F', 'borderColor': '#B4B800', 'id': 3},
+        {'label': 'Shoutout', 'color': '#FFAF73', 'borderColor': '#FC6C00', 'id': 4},
+        {'label': 'DM me', 'color': '#D2CEFF', 'borderColor': '#1400FD', 'id': 5},
+        {'label': 'Question', 'color': '#E6DAC7', 'borderColor': '#807B74', 'id': 6},
+    ];
 
     useEffect(() => {
         fetch((isProd ? BASE_URL.replace('/user', '') : DEV_BASE_URL.replace('/user', '')) + "/admin/app-data")
@@ -71,7 +82,10 @@ const ThreadCreation = () => {
                 .then(
                     (result) => {
                         console.log(result.data.user)
-                        const filteredUsers = result.data.user.filter(user => user.college_id === selectedCollege);
+                        let data = result.data.user;
+                        data = data.filter(user => !user.course_id || user.course_id.length === 0);
+
+                        const filteredUsers = data.filter(user => user.college_id === selectedCollege);
                         console.log(filteredUsers);
                         setUsers(filteredUsers);
                     },
@@ -95,6 +109,14 @@ const ThreadCreation = () => {
     };
 
     const handleCreateThread = async () => {
+        // Check if at least one of text, image, giphy, or url is provided
+        if (!text && !image && !giphy && !url) {
+            setSnackbarMessage('Please enter either text, image, gif, or link');
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
+            return;
+        }
+
         const token = localStorage.getItem("token");
         let uploadedImageUrl = null;
 
@@ -110,7 +132,8 @@ const ThreadCreation = () => {
 
             const randomFilename = generateRandomFilename();
             const payload = {
-                filename: randomFilename
+                filename: randomFilename,
+                bucket: 'heyo-public-assets'
             };
 
             try {
@@ -182,13 +205,13 @@ const ThreadCreation = () => {
                 type: "custom",
                 payload: {
                     text: text,
-                    media: giphy.split('?')[0] || uploadedImageUrl,
+                    media: giphy.split('?')[0] || uploadedImageUrl || null,
                     gif: giphy.split('?')[0] || null,
                     link: url,
-                    tag: "" 
+                    tag: selectedTag ? selectedTag.label : ""
                 },
                 group: selectedCollege,
-                tags: [],
+                tags: selectedTag ? [selectedTag.label] : [],
                 parentId: null
             },
             priority: priority,
@@ -218,6 +241,7 @@ const ThreadCreation = () => {
             setUrl('');
             setPriority('');
             setMediaType('image');
+            setSelectedTag(null);
         } catch (error) {
             console.error('Error creating thread:', error);
             setSnackbarMessage('Error creating thread');
@@ -362,7 +386,25 @@ const ThreadCreation = () => {
                             onChange={(e) => setUrl(e.target.value)}
                         />
                     )}
-
+                    <FormControl component="fieldset" style={{ marginTop: '10px' }}>
+                        <FormLabel component="legend">Select a tag</FormLabel>
+                        <Box display="flex" flexWrap="wrap" gap={1} marginTop={1}>
+                            {tags.map((tag) => (
+                                <Chip
+                                    key={tag.id}
+                                    label={tag.label}
+                                    onClick={() => setSelectedTag(tag)}
+                                    style={{
+                                        backgroundColor: tag.color,
+                                        border: `2px solid ${tag.borderColor}`,
+                                        color: 'black',
+                                        fontWeight: 'bold',
+                                        opacity: selectedTag && selectedTag.id === tag.id ? 1 : 0.6,
+                                    }}
+                                />
+                            ))}
+                        </Box>
+                    </FormControl>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleDialogClose} color="primary">
@@ -401,7 +443,7 @@ const ThreadCreation = () => {
                 </Alert>
             </Snackbar>
             <TableContainer component={Paper} sx={{ marginTop: 2 }}>
-                <Table>
+                <Table size="small">
                     <TableHead>
                         <TableRow>
                             <TableCell>Thread ID</TableCell>
@@ -411,6 +453,7 @@ const ThreadCreation = () => {
                             <TableCell>Media</TableCell>
                             <TableCell>Text</TableCell>
                             <TableCell>Link</TableCell>
+                            <TableCell>Tag</TableCell>
                             <TableCell>Created By</TableCell>
                             <TableCell>Created At</TableCell>
                         </TableRow>
@@ -433,6 +476,7 @@ const ThreadCreation = () => {
                                     </Typography>
                                 </TableCell>
                                 <TableCell>{thread.data.customData.link}</TableCell>
+                                <TableCell>{thread.data.customData.tag}</TableCell>
                                 <TableCell>{thread.createdBy}</TableCell>
                                 <TableCell>{new Date(thread.createdAt).toLocaleString()}</TableCell>
                             </TableRow>

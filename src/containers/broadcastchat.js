@@ -34,7 +34,8 @@ import { DataGrid } from '@mui/x-data-grid';
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
-const BASE_URL = process.env.REACT_APP_BASEURL
+const BASE_URL = process.env.REACT_APP_BASEURL;
+const DEV_BASE_URL = process.env.REACT_APP_DEV_BASEURL;
 let UID = "heyo_user";
 function BroadcastChat() {
     const [user, setUser] = React.useState(undefined);
@@ -49,7 +50,10 @@ function BroadcastChat() {
 
     const [selected, setSelected] = React.useState([]);
     const [open, setOpen] = React.useState(false);
-
+    const [isProd, setIsProd] = React.useState(() => {
+        const savedEnv = sessionStorage.getItem('isProd');
+        return savedEnv !== null ? JSON.parse(savedEnv) : true;
+    });
     const handleClickOpen = () => {
         setOpen(true);
     };
@@ -75,29 +79,20 @@ function BroadcastChat() {
     };
 
     const UIKitSettings = new UIKitSettingsBuilder()
-        .setAppId(consts.APP_ID)
-        .setRegion(consts.REGION)
-        .setAuthKey(consts.AUTH_KEY)
+    .setAppId(isProd ? consts.APP_ID : consts.DEV_APP_ID)
+        .setRegion(isProd ? consts.REGION : consts.DEV_REGION)
+        .setAuthKey(isProd ? consts.AUTH_KEY : consts.DEV_AUTH_KEY)
         .subscribePresenceForFriends()
         .build();
     React.useEffect(() => {
 
-        /*  CometChat.getUser(UID).then(
-             user => {
-                 console.log("User details fetched for user:", user);
-                 setUser(user);
-             }, error => {
-                 console.log("User details fetching failed with error:", error);
-             }
-         ); */
-
-        CometChat.logout().then(
+       /*  CometChat.logout().then(
             () => {
-                setUser(undefined);
+                setUser(undefined); */
                 CometChatUIKit.init(UIKitSettings)
                     .then(() => {
                         console.log("Initialization completed successfully");
-                        CometChatUIKit.login(UID, consts.AUTH_KEY)
+                        CometChatUIKit.login(UID, isProd ? consts.AUTH_KEY : consts.DEV_AUTH_KEY)
                             .then((user) => {
                                 console.log("Login Successful", { user });
                                 setUser(user);
@@ -108,58 +103,44 @@ function BroadcastChat() {
                     .catch((e) => {
                         console.log(e);
                     });
-            }, error => {
+         /*    }, error => {
                 console.log("Logout failed with exception:", { error });
-            })
+            }) */
     }, []);
 
     React.useEffect(() => {
         setIsLoaded(false);
 
-        fetch(BASE_URL + "/admin-get-real-users")
+        fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-get-real-users")
             .then(res => res.json())
             .then(
                 (result) => {
                     console.log(result)
                     setIsLoaded(true);
                     let data = result.data.user;
-
+                    // Filter users without interests
+                    data = data.filter(user => !user.interests || user.interests.length === 0);
+                    // Map only required fields
+                    data = data.map(user => ({
+                        id: user.id,
+                        username: user.username,
+                        college_id: user.college_id
+                    }));
+                    console.log(data)
                     setItems(data);
                 },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
                 (error) => {
                     setIsLoaded(true);
-                    // setError(error);
+                    console.error("Error fetching users:", error);
                 }
             )
     }, [])
 
-
-
     const columns = [
-        { field: 'id', headerName: 'User DB ID', width: 90, type: 'number', },
-        { field: 'first_name', headerName: 'First name', width: 130 },
-        { field: 'last_name', headerName: 'Last name', width: 130 },
-        {
-            field: 'gender',
-            headerName: 'Gender',
-
-            width: 110,
-        },
-        {
-            field: 'college_id',
-            headerName: 'College',
-            // description: 'This column has a value getter and is not sortable.',
-            sortable: false,
-            width: 160,
-            //valueGetter: (value, row) => `${row.firstName || ''} ${row.lastName || ''}`,
-        },
+        { field: 'id', headerName: 'User DB ID', width: 90, type: 'number' },
+        { field: 'username', headerName: 'Username', width: 200 },
+        { field: 'college_id', headerName: 'College', width: 280 },
     ];
-
-
-
 
     function sendBulkMessage() {
         const options = {
@@ -168,12 +149,12 @@ function BroadcastChat() {
                 accept: 'application/json',
                 onBehalfOf: UID.toString(),
                 'content-type': 'application/json',
-                apikey: 'b1eefbb21e93639f2576dc2d9c68e3e751bf6358'
+                apikey: isProd ? 'b1eefbb21e93639f2576dc2d9c68e3e751bf6358' : 'b6b82b4b0434b97f248cd93ef817b94b76758ea7'
             },
             body: JSON.stringify({ category: 'message', type: 'text', data: { text: message }, multipleReceivers: { uids: selected } })
         };
         console.log(options)
-        fetch('https://2535993d01b5203a.api-in.cometchat.io/v3/messages', options)
+        fetch((isProd ? 'https://2535993d01b5203a.api-in.cometchat.io/v3/messages' : 'https://2404783e5909fb6f.api-us.cometchat.io/v3/messages'), options)
             .then(response => response.json())
             .then(response => {
                 console.log(response)

@@ -28,9 +28,9 @@ import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettin
 import InsightsIcon from '@mui/icons-material/Insights';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import SmsFailedOutlinedIcon from '@mui/icons-material/SmsFailedOutlined';
+import SettingsIcon from '@mui/icons-material/Settings';
 import Logo from '../logo.png'
 import DemoUsers from './demousers';
-import SeededUsers from './seededusers';
 import SuperUsers from './superusers';
 import Interests from './interests';
 import Verification from './verification';
@@ -38,8 +38,8 @@ import BroadcastChat from './broadcastchat';
 import Chat from './seededuserchat';
 import Notification from './notification'
 import Dashboard from './dashboard'
-import Threads from './threads'
-import ThreadCreation from './thread_creation'
+import SeededThread from './seededthread';
+import Configurations from './configurations';
 const BASE_URL = process.env.REACT_APP_BASEURL;
 const DEV_BASE_URL = process.env.REACT_APP_DEV_BASEURL;
 
@@ -245,7 +245,7 @@ export default function Landing() {
                 </DrawerHeader>
                 <Divider />
                 <List>
-                    {['Dashboard','Verification', 'Seeded Users'].map((text, index) => (
+                    {['Dashboard', 'Verification', 'Configurations'].map((text, index) => (
                         <ListItem key={text} disablePadding sx={{ display: 'block' }}>
                             <ListItemButton
                                 sx={{
@@ -262,9 +262,9 @@ export default function Landing() {
                                         justifyContent: 'center',
                                     }}
                                 >
-                                    {index ==0 && <InsightsIcon/>}
-                                    {index ==1 &&  <HowToRegOutlinedIcon /> }
-                                    {index ==2 &&  <RecentActorsOutlinedIcon /> }
+                                    {index === 0 && <InsightsIcon/>}
+                                    {index === 1 && <HowToRegOutlinedIcon />}
+                                    {index === 2 && <SettingsIcon />}
                                 </ListItemIcon>
                                 <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
                             </ListItemButton>
@@ -273,7 +273,7 @@ export default function Landing() {
                 </List>
                 <Divider />
                 <List>
-                    {['Chat - Seeded <> Real', 'Broadcast Chat', 'Push Notification', 'Reported Threads', 'Thread Creation'].map((text, index) => (
+                    {['Chat - Seeded <> Real', 'Broadcast Chat', 'Push Notification',  'Seeded Thread'].map((text, index) => (
                         <ListItem key={text} disablePadding sx={{ display: 'block' }}>
                                                        <ListItemButton
                                 sx={{
@@ -293,8 +293,7 @@ export default function Landing() {
                                     {index ==0 &&  <ThreePOutlinedIcon /> }
                                     {index ==1 &&  <SpeakerNotesOutlinedIcon /> }
                                     {index ==2 &&  <CampaignOutlinedIcon /> }
-                                    {index ==3 &&  <SmsFailedOutlinedIcon /> }
-                                    {index ==4 &&  <ForumOutlinedIcon /> }
+                                    {index ==3 &&  <ForumOutlinedIcon /> }
                                 </ListItemIcon>
                                 <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
                             </ListItemButton>
@@ -309,14 +308,12 @@ export default function Landing() {
                {page == 'Dashboard' && <Dashboard />}
 
                 {page == 'Verification' && <Verification />}
-                {page == 'Seeded Users' && <SeededUsers />}
+                {page == 'Configurations' && <Configurations />}
                 {isProd && page == 'Chat - Seeded <> Real' && <Chat />}
-                {isProd && page == 'Broadcast Chat' &&<BroadcastChat/>}
+                {page == 'Broadcast Chat' && <BroadcastChat/>}
                 {isProd && page == 'Push Notification' && <Notification/>}
-                {page == 'Reported Threads' && <Threads/>}
-                {!isProd && page == 'Thread Creation' && <ThreadCreation/>}
-                
-                {!isProd && (page == 'Chat - Seeded <> Real' || page == 'Broadcast Chat' || page == 'Push Notification') && (
+                {!isProd && page == 'Seeded Thread' && <SeededThread/>}
+                {!isProd && (page == 'Chat - Seeded <> Real' || page == 'Push Notification') && (
                     <Typography variant="h6" color="error">
                         This feature is not available in dev mode.
                     </Typography>
