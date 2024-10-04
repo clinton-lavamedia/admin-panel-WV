@@ -31,9 +31,16 @@ const Configurations = () => {
       .then(res => res.json())
       .then(
         (result) => {
-          if (result.success) {
-            setLaunchEventIn(result.data.launchEventIn || '');
-            setLiveColleges(result.data.liveColleges || []);
+          if (result) {
+            const launchEvent = result.data[0].launchEventIn || '';
+            const liveCollegesList = result.data[0].liveColleges || [];
+            setLaunchEventIn(launchEvent);
+            setLiveColleges(liveCollegesList);
+            
+            // Auto-select launchEventIn college in liveColleges if not already there
+            if (launchEvent && !liveCollegesList.includes(launchEvent)) {
+              setLiveColleges([...liveCollegesList, launchEvent]);
+            }
           }
         },
         (error) => {
@@ -48,11 +55,19 @@ const Configurations = () => {
   }, [isProd, BASE_URL, DEV_BASE_URL]);
 
   const handleLaunchEventChange = (event) => {
-    setLaunchEventIn(event.target.value);
+    const selectedCollege = event.target.value;
+    setLaunchEventIn(selectedCollege);
+    if (selectedCollege && !liveColleges.includes(selectedCollege)) {
+      setLiveColleges([...liveColleges, selectedCollege]);
+    }
   };
 
   const handleLiveCollegesChange = (event) => {
-    setLiveColleges(event.target.value);
+    const selectedColleges = event.target.value;
+    setLiveColleges(selectedColleges);
+    if (launchEventIn && !selectedColleges.includes(launchEventIn)) {
+      setLiveColleges([...selectedColleges, launchEventIn]);
+    }
   };
 
   const handleSave = () => {
