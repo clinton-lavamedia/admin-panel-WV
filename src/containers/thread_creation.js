@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, MenuItem, Typography, Grid, InputAdornment, IconButton, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, MenuItem, Typography, Grid, InputAdornment, IconButton, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Checkbox } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 
 import { GiphyFetch } from '@giphy/js-fetch-api'
@@ -30,6 +30,11 @@ const ThreadCreation = () => {
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
     const [threads, setThreads] = useState([]);
     const [selectedTag, setSelectedTag] = useState(null);
+    const [sendPushNotification, setSendPushNotification] = useState(false);
+    const [pushNotificationTitle, setPushNotificationTitle] = useState('');
+    const [pushNotificationBody, setPushNotificationBody] = useState('');
+    const [launchEventIn, setLaunchEventIn] = useState('');
+    const [liveColleges, setLiveColleges] = useState([]);
 
     const tags = [
         {'label': 'Confession', 'color': '#EF9EFF', 'borderColor': '#D400FF', 'id': 0},
@@ -73,6 +78,28 @@ const ThreadCreation = () => {
                     console.error('Error fetching admin thread:', error);
                 }
             );
+        
+        // Fetch college configurations
+        fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-get-college-config")
+            .then(res => res.json())
+            .then(
+                (result) => {
+                    if (result && result.data && result.data[0]) {
+                        const launchEvent = result.data[0].launchEventIn || '';
+                        const liveCollegesList = result.data[0].liveColleges || [];
+                        setLaunchEventIn(launchEvent);
+                        setLiveColleges(liveCollegesList);
+                        
+                        // Auto-select launchEventIn college in liveColleges if not already there
+                        if (launchEvent && !liveCollegesList.includes(launchEvent)) {
+                            setLiveColleges([...liveCollegesList, launchEvent]);
+                        }
+                    }
+                },
+                (error) => {
+                    console.error('Error fetching college configurations:', error);
+                }
+            );
     }, []);
 
     useEffect(() => {
@@ -112,6 +139,14 @@ const ThreadCreation = () => {
         // Check if at least one of text, image, giphy, or url is provided
         if (!text && !image && !giphy && !url) {
             setSnackbarMessage('Please enter either text, image, gif, or link');
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
+            return;
+        }
+
+        // Check if the selected college is live
+        if (!liveColleges.includes(selectedCollege)) {
+            setSnackbarMessage('Selected college is not live');
             setSnackbarSeverity('error');
             setSnackbarOpen(true);
             return;
@@ -232,6 +267,39 @@ const ThreadCreation = () => {
             setSnackbarMessage('Thread creation successful');
             setSnackbarSeverity('success');
             setSnackbarOpen(true);
+
+            // Send push notification if enabled
+            if (sendPushNotification) {
+                let userIds = [];
+                if (selectedCollege === launchEventIn) {
+                    const realUsersResponse = await fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/admin-get-real-users");
+                    const realUsersData = await realUsersResponse.json();
+                    userIds = realUsersData.data.user
+                        .filter(user => liveColleges.includes(user.college_id))
+                        .map(user => user.id);
+                }
+
+                if (userIds.length > 0) {
+                    const notificationBody = {
+                        title: pushNotificationTitle,
+                        message: pushNotificationBody,
+                        user_ids: userIds,
+                        type: 'USER_NOTIFICATION'
+                    };
+
+                    const notificationResponse = await fetch((isProd ? BASE_URL : DEV_BASE_URL) + "/send-bulk-user-notification", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(notificationBody)
+                    });
+
+                    const notificationResult = await notificationResponse.json();
+                    console.log('Push notification sent:', notificationResult);
+                }
+            }
+
             // Clear all fields after posting
             setSelectedCollege('');
             setSelectedUser('');
@@ -242,6 +310,9 @@ const ThreadCreation = () => {
             setPriority('');
             setMediaType('image');
             setSelectedTag(null);
+            setSendPushNotification(false);
+            setPushNotificationTitle('');
+            setPushNotificationBody('');
         } catch (error) {
             console.error('Error creating thread:', error);
             setSnackbarMessage('Error creating thread');
@@ -278,133 +349,167 @@ const ThreadCreation = () => {
                     Create seeded thread
                 </Button>
             </Box>
-            <Dialog open={dialogOpen} onClose={handleDialogClose}>
+            <Dialog open={dialogOpen} onClose={handleDialogClose} maxWidth="md" fullWidth>
                 <DialogTitle>Create Seeded Thread</DialogTitle>
                 <DialogContent>
-                    <TextField
-                        select
-                        margin="dense"
-                        label="College"
-                        fullWidth
-                        value={selectedCollege}
-                        onChange={(e) => setSelectedCollege(e.target.value)}
-                    >
-                        {colleges.map((college) => (
-                            <MenuItem key={college.id} value={college.name}>
-                                {college.name}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                    <TextField
-                        select
-                        margin="dense"
-                        label="User"
-                        fullWidth
-                        value={selectedUser}
-                        onChange={(e) => setSelectedUser(e.target.value)}
-                        disabled={!selectedCollege}
-                    >
-                        {users.map((user) => (
-                            <MenuItem key={user.id} value={user.id}>
-                                {user.username}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                    <TextField
-                        margin="dense"
-                        label="Priority (for pinned threads)"
-                        type="number"
-                        fullWidth
-                        value={priority}
-                        onChange={(e) => setPriority(e.target.value)}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Text"
-                        type="text"
-                        fullWidth
-                        multiline
-                        rows={4}
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                    />
-                    <FormControl component="fieldset" style={{ marginTop: '10px' }}>
-                        <FormLabel component="legend">Media Type</FormLabel>
-                        <RadioGroup
-                            row
-                            aria-label="media-type"
-                            name="media-type"
-                            value={mediaType}
-                            onChange={(e) => setMediaType(e.target.value)}
-                        >
-                            <FormControlLabel value="image" control={<Radio />} label="Image" />
-                            <FormControlLabel value="giphy" control={<Radio />} label="Giphy" />
-                            <FormControlLabel value="link" control={<Radio />} label="Link" />
-                        </RadioGroup>
-                    </FormControl>
-                    {mediaType === 'image' && (
-                        <Button
-                            variant="contained"
-                            component="label"
-                            fullWidth
-                            style={{ marginTop: '10px' }}
-                        >
-                            Upload Image
-                            <input
-                                type="file"
-                                hidden
-                                onChange={handleImageUpload}
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <TextField
+                                select
+                                margin="dense"
+                                label="College"
+                                fullWidth
+                                value={selectedCollege}
+                                onChange={(e) => setSelectedCollege(e.target.value)}
+                            >
+                                {colleges.map((college) => (
+                                    <MenuItem key={college.id} value={college.name}>
+                                        {college.name}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                            <TextField
+                                select
+                                margin="dense"
+                                label="User"
+                                fullWidth
+                                value={selectedUser}
+                                onChange={(e) => setSelectedUser(e.target.value)}
+                                disabled={!selectedCollege}
+                            >
+                                {users.map((user) => (
+                                    <MenuItem key={user.id} value={user.id}>
+                                        {user.username}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                            <TextField
+                                margin="dense"
+                                label="Priority (for pinned threads)"
+                                type="number"
+                                fullWidth
+                                value={priority}
+                                onChange={(e) => setPriority(e.target.value)}
                             />
-                        </Button>
-                    )}
-                    {mediaType === 'giphy' && (
-                        <TextField
-                            margin="dense"
-                            label="Search GIPHY"
-                            type="text"
-                            fullWidth
-                            value={giphy}
-                            onChange={(e) => setGiphy(e.target.value)}
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton onClick={handleGiphySearch}>
-                                            <SearchIcon />
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                    )}
-                    {mediaType === 'link' && (
-                        <TextField
-                            margin="dense"
-                            label="URL"
-                            type="text"
-                            fullWidth
-                            value={url}
-                            onChange={(e) => setUrl(e.target.value)}
-                        />
-                    )}
-                    <FormControl component="fieldset" style={{ marginTop: '10px' }}>
-                        <FormLabel component="legend">Select a tag</FormLabel>
-                        <Box display="flex" flexWrap="wrap" gap={1} marginTop={1}>
-                            {tags.map((tag) => (
-                                <Chip
-                                    key={tag.id}
-                                    label={tag.label}
-                                    onClick={() => setSelectedTag(tag)}
-                                    style={{
-                                        backgroundColor: tag.color,
-                                        border: `2px solid ${tag.borderColor}`,
-                                        color: 'black',
-                                        fontWeight: 'bold',
-                                        opacity: selectedTag && selectedTag.id === tag.id ? 1 : 0.6,
+                            <TextField
+                                margin="dense"
+                                label="Text"
+                                type="text"
+                                fullWidth
+                                multiline
+                                rows={4}
+                                value={text}
+                                onChange={(e) => setText(e.target.value)}
+                            />
+                            <TextField
+                                margin="dense"
+                                label="URL"
+                                type="text"
+                                fullWidth
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                            />
+                            <FormControl component="fieldset" style={{ marginTop: '10px' }}>
+                                <FormLabel component="legend">Media Type</FormLabel>
+                                <RadioGroup
+                                    row
+                                    aria-label="media-type"
+                                    name="media-type"
+                                    value={mediaType}
+                                    onChange={(e) => setMediaType(e.target.value)}
+                                >
+                                    <FormControlLabel value="image" control={<Radio />} label="Image" />
+                                    <FormControlLabel value="giphy" control={<Radio />} label="Giphy" />
+                                </RadioGroup>
+                            </FormControl>
+                            {mediaType === 'image' && (
+                                <Button
+                                    variant="contained"
+                                    component="label"
+                                    fullWidth
+                                    style={{ marginTop: '10px' }}
+                                >
+                                    Upload Image
+                                    <input
+                                        type="file"
+                                        hidden
+                                        onChange={handleImageUpload}
+                                    />
+                                </Button>
+                            )}
+                            {mediaType === 'giphy' && (
+                                <TextField
+                                    margin="dense"
+                                    label="Search GIPHY"
+                                    type="text"
+                                    fullWidth
+                                    value={giphy}
+                                    onChange={(e) => setGiphy(e.target.value)}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={handleGiphySearch}>
+                                                    <SearchIcon />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
                                     }}
                                 />
-                            ))}
-                        </Box>
-                    </FormControl>
+                            )}
+                            <FormControl component="fieldset" style={{ marginTop: '10px' }}>
+                                <FormLabel component="legend">Select a tag</FormLabel>
+                                <Box display="flex" flexWrap="wrap" gap={1} marginTop={1}>
+                                    {tags.map((tag) => (
+                                        <Chip
+                                            key={tag.id}
+                                            label={tag.label}
+                                            onClick={() => setSelectedTag(tag)}
+                                            style={{
+                                                backgroundColor: tag.color,
+                                                border: `2px solid ${tag.borderColor}`,
+                                                color: 'black',
+                                                fontWeight: 'bold',
+                                                opacity: selectedTag && selectedTag.id === tag.id ? 1 : 0.6,
+                                            }}
+                                        />
+                                    ))}
+                                </Box>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={sendPushNotification}
+                                        onChange={(e) => setSendPushNotification(e.target.checked)}
+                                    />
+                                }
+                                label="Send Push Notification"
+                            />
+                            {sendPushNotification && (
+                                <>
+                                    <TextField
+                                        margin="dense"
+                                        label="Push Notification Title"
+                                        type="text"
+                                        fullWidth
+                                        value={pushNotificationTitle}
+                                        onChange={(e) => setPushNotificationTitle(e.target.value)}
+                                    />
+                                    <TextField
+                                        margin="dense"
+                                        label="Push Notification Body"
+                                        type="text"
+                                        fullWidth
+                                        multiline
+                                        rows={2}
+                                        value={pushNotificationBody}
+                                        onChange={(e) => setPushNotificationBody(e.target.value)}
+                                    />
+                                </>
+                            )}
+                        </Grid>
+                    </Grid>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleDialogClose} color="primary">

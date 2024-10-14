@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tabs, Tab, Box } from '@mui/material';
+import { Tabs, Tab, Box, Typography } from '@mui/material';
 import SeededUsers from './seededusers';
 import ThreadCreation from './thread_creation';
 import Threads from './threads';
@@ -13,13 +13,15 @@ const SeededThread = () => {
 
     return (
         <Box sx={{ width: '100%' }}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={tabValue} onChange={handleTabChange} aria-label="seeded thread tabs">
-                    <Tab label="Seeded Users" />
+              <Typography variant="h3" gutterBottom textAlign={'center'}>
+                Seeded Users & Threads
+            </Typography>
+            <Tabs value={tabValue} onChange={handleTabChange} centered>
+            <Tab label="Seeded Users" />
                     <Tab label="Thread Creation" />
                     <Tab label="Reported Threads" />
-                </Tabs>
-            </Box>
+            </Tabs>
+
             <Box sx={{ padding: 2 }}>
                 {tabValue === 0 && <SeededUsers />}
                 {tabValue === 1 && <ThreadCreation />}

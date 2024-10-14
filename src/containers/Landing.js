@@ -34,7 +34,6 @@ import DemoUsers from './demousers';
 import SuperUsers from './superusers';
 import Interests from './interests';
 import Verification from './verification';
-import BroadcastChat from './broadcastchat';
 import Chat from './seededuserchat';
 import Notification from './notification'
 import Dashboard from './dashboard'
@@ -273,7 +272,7 @@ export default function Landing() {
                 </List>
                 <Divider />
                 <List>
-                    {['Chat - Seeded <> Real', 'Broadcast Chat', 'Push Notification',  'Seeded Thread'].map((text, index) => (
+                    {['Chat - Seeded <> Real', 'Notifications', 'Seeded Users & Threads'].map((text, index) => (
                         <ListItem key={text} disablePadding sx={{ display: 'block' }}>
                                                        <ListItemButton
                                 sx={{
@@ -291,9 +290,8 @@ export default function Landing() {
                                     }}
                                 >
                                     {index ==0 &&  <ThreePOutlinedIcon /> }
-                                    {index ==1 &&  <SpeakerNotesOutlinedIcon /> }
-                                    {index ==2 &&  <CampaignOutlinedIcon /> }
-                                    {index ==3 &&  <ForumOutlinedIcon /> }
+                                    {index ==1 &&  <CampaignOutlinedIcon /> }
+                                    {index ==2 &&  <ForumOutlinedIcon /> }
                                 </ListItemIcon>
                                 <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
                             </ListItemButton>
@@ -310,15 +308,14 @@ export default function Landing() {
                 {page == 'Verification' && <Verification />}
                 {page == 'Configurations' && <Configurations />}
                 {isProd && page == 'Chat - Seeded <> Real' && <Chat />}
-                {page == 'Broadcast Chat' && <BroadcastChat/>}
-                {isProd && page == 'Push Notification' && <Notification/>}
-                {!isProd && page == 'Seeded Thread' && <SeededThread/>}
-                {!isProd && (page == 'Chat - Seeded <> Real' || page == 'Push Notification') && (
+                {page == 'Notifications' && <Notification/>}
+                {!isProd && page == 'Seeded Users & Threads' && <SeededThread/>}
+                {!isProd && (page == 'Chat - Seeded <> Real' ) && (
                     <Typography variant="h6" color="error">
                         This feature is not available in dev mode.
                     </Typography>
                 )}
-                {isProd && (page == 'Thread Creation') && (
+                {isProd && (page == 'Seeded Users & Threads') && (
                     <Typography variant="h6" color="error">
                         This feature is not available in prod mode.
                     </Typography>

@@ -1,4 +1,3 @@
-
 import { CometChatUIKit, UIKitSettingsBuilder } from "@cometchat/chat-uikit-react";
 import { CometChatUsersWithMessages, CometChatUsers } from '@cometchat/chat-uikit-react';
 import {
@@ -19,6 +18,8 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Checkbox from '@mui/material/Checkbox';
 import Box from '@mui/material/Box';
 import { CometChat } from "@cometchat/chat-sdk-javascript";
+import CircularProgress from '@mui/material/CircularProgress';
+import Typography from '@mui/material/Typography';
 
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
@@ -30,23 +31,33 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Slide from '@mui/material/Slide';
 import { DataGrid } from '@mui/x-data-grid';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Grid from '@mui/material/Grid';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
+
 const BASE_URL = process.env.REACT_APP_BASEURL;
 const DEV_BASE_URL = process.env.REACT_APP_DEV_BASEURL;
 let UID = "heyo_user";
+
 function BroadcastChat() {
     const [user, setUser] = React.useState(undefined);
     const [isLoaded, setIsLoaded] = React.useState(false);
     const [refresh, setRefresh] = React.useState(false);
     const [items, setItems] = React.useState([]);
+    const [filteredItems, setFilteredItems] = React.useState([]);
     const [UIDs, setUIDs] = React.useState([]);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(25);
     const [message, setMessage] = React.useState('');
     const [errorMessage, setErrorMessage] = React.useState('');
+    const [selectedCollege, setSelectedCollege] = React.useState('');
+    const [colleges, setColleges] = React.useState([]);
 
     const [selected, setSelected] = React.useState([]);
     const [open, setOpen] = React.useState(false);
@@ -65,7 +76,7 @@ function BroadcastChat() {
 
     const handleSelectAllClick = (event) => {
         if (event.target.checked) {
-            const newSelected = items.map((n) => n.id);
+            const newSelected = filteredItems.map((n) => n.id);
             setSelected(newSelected);
             return;
         }
@@ -75,7 +86,15 @@ function BroadcastChat() {
     const handleClick = (event, id) => {
         console.log(event, id)
         setSelected(event)
+    };
 
+    const handleCollegeChange = (event) => {
+        setSelectedCollege(event.target.value);
+        if (event.target.value === '') {
+            setFilteredItems(items);
+        } else {
+            setFilteredItems(items.filter(item => item.college_id === event.target.value));
+        }
     };
 
     const UIKitSettings = new UIKitSettingsBuilder()
@@ -85,27 +104,20 @@ function BroadcastChat() {
         .subscribePresenceForFriends()
         .build();
     React.useEffect(() => {
-
-       /*  CometChat.logout().then(
-            () => {
-                setUser(undefined); */
-                CometChatUIKit.init(UIKitSettings)
-                    .then(() => {
-                        console.log("Initialization completed successfully");
-                        CometChatUIKit.login(UID, isProd ? consts.AUTH_KEY : consts.DEV_AUTH_KEY)
-                            .then((user) => {
-                                console.log("Login Successful", { user });
-                                setUser(user);
-                            })
-                            .catch((error) => { }, console.log);
+        CometChatUIKit.init(UIKitSettings)
+            .then(() => {
+                console.log("Initialization completed successfully");
+                CometChatUIKit.login(UID, isProd ? consts.AUTH_KEY : consts.DEV_AUTH_KEY)
+                    .then((user) => {
+                        console.log("Login Successful", { user });
                         setUser(user);
                     })
-                    .catch((e) => {
-                        console.log(e);
-                    });
-         /*    }, error => {
-                console.log("Logout failed with exception:", { error });
-            }) */
+                    .catch((error) => { }, console.log);
+                setUser(user);
+            })
+            .catch((e) => {
+                console.log(e);
+            });
     }, []);
 
     React.useEffect(() => {
@@ -128,6 +140,10 @@ function BroadcastChat() {
                     }));
                     console.log(data)
                     setItems(data);
+                    setFilteredItems(data);
+                    // Extract unique college IDs
+                    const uniqueColleges = [...new Set(data.map(item => item.college_id))];
+                    setColleges(uniqueColleges);
                 },
                 (error) => {
                     setIsLoaded(true);
@@ -178,44 +194,82 @@ function BroadcastChat() {
     }
 
     return user && items ? (
+        <Box sx={{ flexGrow: 1, p: 3 }}>
+            <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+                    <Paper elevation={3} sx={{ width: '100%' }}>
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                        <InputLabel id="college-select-label">Filter by College</InputLabel>
+                        <Select
+                            labelId="college-select-label"
+                            id="college-select"
+                            value={selectedCollege}
+                            label="Filter by College"
+                            onChange={handleCollegeChange}
+                        >
+                            <MenuItem value="">
+                                <em>All Colleges</em>
+                            </MenuItem>
+                            {colleges.map((college) => (
+                                <MenuItem key={college} value={college}>{college}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                        <DataGrid
+                            rows={filteredItems}
+                            columns={columns}
+                            initialState={{
+                                pagination: {
+                                    paginationModel: { page: 0, pageSize: 10 },
+                                },
+                            }}
+                            pageSizeOptions={[10, 20, 30, 40, 100, 200, 300, 400, 500]}
+                            checkboxSelection={!open}
+                            onRowSelectionModelChange={(rowSelectionModel, details) => handleClick(rowSelectionModel, details)}
+                        />
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                    <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+                        <Typography variant="h6" gutterBottom>
+                            Logged in as: {user.name} - User ID: {user.uid}
+                        </Typography>
+                        <TextField
+                            fullWidth
+                            id="outlined-multiline-static"
+                            label="Message"
+                            placeholder="Enter message"
+                            multiline
+                            rows={4}
+                            onChange={(event) => setMessage(event.target.value)}
+                            sx={{ mb: 2 }}
+                        />
+                        <Button variant="contained" color="primary" disabled={!message || !selected.length} 
+                        onClick={sendBulkMessage}>
+                            Send
+                        </Button>
+                    </Paper>
+                    <Paper elevation={3} sx={{ p: 2, height: '30vh', overflowY: 'auto' }}>
+                        <Typography variant="h6" gutterBottom>
+                            Selected Users
+                        </Typography>
+                        <List>
+                            {selected.map((id) => {
+                                const user = items.find(item => item.id === id);
+                                return (
+                                    <ListItem key={id}>
+                                        <ListItemText primary={user.username} secondary={user.college_id} />
+                                    </ListItem>
+                                );
+                            })}
+                        </List>
+                    </Paper>
+                    
+                </Grid>
+               
+               
+            </Grid>
 
-        <div style={{ width: "95vw", height: "95vh" }}>
-            <div>
-                Logged in as: {user.name + ' - User ID: ' + user.uid}
-            </div>
-            <div style={{ marginTop: 20 }}>
-                <TextField
-                    style={{ width: '50%' }}
-                    id="outlined-multiline-static"
-                    label="Message"
-                    placeholder="Enter message"
-
-                    multiline
-                    rows={4}
-                    onChange={(event) => {
-                        setMessage(event.target.value);
-                    }}
-                />
-
-
-            </div>
-            <div style={{ marginTop: 10, marginBottom: 10 }}>
-                <Button variant="outlined" color="primary" onClick={sendBulkMessage}
-                >Send</Button>
-            </div>
-
-            <DataGrid
-                rows={items}
-                columns={columns}
-                initialState={{
-                    pagination: {
-                        paginationModel: { page: 0, pageSize: 20 },
-                    },
-                }}
-                pageSizeOptions={[20, 40, 60, 80, 100]}
-                checkboxSelection={!open}
-                onRowSelectionModelChange={(rowSelectionModel, details) => handleClick(rowSelectionModel, details)}
-            />
             <Dialog
                 open={open}
                 TransitionComponent={Transition}
@@ -227,17 +281,19 @@ function BroadcastChat() {
                 <DialogTitle>{"Report"}</DialogTitle>
                 <DialogContent>
                     <DialogContentText id="alert-dialog-slide-description">
-                        {errorMessage ? errorMessage : 'Successfully sent all message'}
+                        {errorMessage ? errorMessage : 'Successfully sent all messages'}
                     </DialogContentText>
                 </DialogContent>
-
+                <DialogActions>
+                    <Button onClick={handleClose}>Close</Button>
+                </DialogActions>
             </Dialog>
-        </div>
-    )
-        : (
-            <div>Loading...</div>
-        )
-
+        </Box>
+    ) : (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <CircularProgress />
+        </Box>
+    );
 }
 
 export default BroadcastChat;
