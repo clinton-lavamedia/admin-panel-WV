@@ -309,17 +309,17 @@ export default function Landing() {
                 {page == 'Configurations' && <Configurations />}
                 {isProd && page == 'Chat - Seeded <> Real' && <Chat />}
                 {page == 'Notifications' && <Notification/>}
-                {!isProd && page == 'Seeded Users & Threads' && <SeededThread/>}
+                { page == 'Seeded Users & Threads' && <SeededThread/>}
                 {!isProd && (page == 'Chat - Seeded <> Real' ) && (
                     <Typography variant="h6" color="error">
                         This feature is not available in dev mode.
                     </Typography>
                 )}
-                {isProd && (page == 'Seeded Users & Threads') && (
+              {/*   {isProd && (page == 'Seeded Users & Threads') && (
                     <Typography variant="h6" color="error">
                         This feature is not available in prod mode.
                     </Typography>
-                )}
+                )} */}
                 {page == '' &&
                 <div style={{justifyContent:'center',alignItems:'center', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                    {/*  <Typography gutterBottom textAlign={'center'}>
