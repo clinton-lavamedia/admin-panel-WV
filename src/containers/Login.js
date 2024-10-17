@@ -31,6 +31,8 @@ export default function Login() {
   const [password, setPassword] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [open, setOpen] = React.useState(false);
+  const [alertMessage, setAlertMessage] = React.useState('');
+  const [alertSeverity, setAlertSeverity] = React.useState('error');
   const [isUserAuthenticated, setIsUserAuthenticated] = React.useState(false)
   React.useEffect(() => {
     const token = localStorage.getItem("token");
@@ -60,19 +62,34 @@ export default function Login() {
         console.log(result)
         console.log(result.data)
         if (result.data.length > 0) {
-          console.log('logged in')
-          navigate("/landing");
-          localStorage.setItem('token', email)
-          localStorage.setItem('admin_id', result.data[0].id)
-
+          const user = result.data[0];
+          if (user.active) {
+            console.log('logged in')
+            navigate("/landing");
+            if (user.email.includes(':')) {
+              const [userType, userEmail] = user.email.split(':');
+              localStorage.setItem('token', userEmail);
+              localStorage.setItem('usertype', userType);
+            } else {
+              localStorage.setItem('token', user.email);
+              localStorage.setItem('usertype', 'admin');
+            }
+            localStorage.setItem('admin_id', user.id);
+          } else {
+            setAlertMessage('Your account is not active. Please contact the administrator.');
+            setAlertSeverity('warning');
+            setOpen(true);
+          }
         } else {
+          setAlertMessage('Invalid credentials');
+          setAlertSeverity('error');
           setOpen(true);
         }
-
       }, (error) => {
         console.log(error)
+        setAlertMessage('An error occurred. Please try again.');
+        setAlertSeverity('error');
         setOpen(true);
-
       })
   }
 
@@ -103,8 +120,8 @@ export default function Login() {
           Sign in as a HEYO! admin
         </Typography>
         <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-          <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
-            Invalid credentials
+          <Alert onClose={handleClose} severity={alertSeverity} sx={{ width: '100%' }}>
+            {alertMessage}
           </Alert>
         </Snackbar>
         <FormControl sx={{ m: 1 }} variant="outlined" fullWidth={true}>

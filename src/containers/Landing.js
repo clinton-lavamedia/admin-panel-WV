@@ -121,6 +121,9 @@ export default function Landing() {
         const savedEnv = sessionStorage.getItem('isProd');
         return savedEnv !== null ? JSON.parse(savedEnv) : true;
     });
+    const [userType, setUserType] = useState(() => {
+        return localStorage.getItem("usertype") || "admin";
+    });
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -183,6 +186,10 @@ export default function Landing() {
         });
     };
 
+    const menuItems = userType === 'admin' 
+        ? ['Dashboard', 'Verification', 'Configurations', 'Chat - Seeded <> Real', 'Notifications', 'Seeded Users & Threads']
+        : ['Verification', 'Seeded Users & Threads'];
+
     return (
         <Box sx={{ display: 'flex' }}>
             <CssBaseline />
@@ -205,7 +212,7 @@ export default function Landing() {
                     <Typography variant="h5" noWrap component="div" sx={{ flexGrow: 1 }}>
                         HEYO admin portal 
                         <Typography variant="caption" noWrap component="div" sx={{ flexGrow: 1 }}>
-                        {user}
+                        {user} ({userType})
                     </Typography>
                     </Typography>
                     {isProd && <div style={{ width: 15, height: 15, margin: 10, borderRadius: '50%', backgroundColor: 'green', animation: 'pulse 1s infinite' }}></div>}
@@ -244,7 +251,7 @@ export default function Landing() {
                 </DrawerHeader>
                 <Divider />
                 <List>
-                    {['Dashboard', 'Verification', 'Configurations'].map((text, index) => (
+                    {menuItems.map((text, index) => (
                         <ListItem key={text} disablePadding sx={{ display: 'block' }}>
                             <ListItemButton
                                 sx={{
@@ -261,37 +268,12 @@ export default function Landing() {
                                         justifyContent: 'center',
                                     }}
                                 >
-                                    {index === 0 && <InsightsIcon/>}
-                                    {index === 1 && <HowToRegOutlinedIcon />}
-                                    {index === 2 && <SettingsIcon />}
-                                </ListItemIcon>
-                                <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
-                            </ListItemButton>
-                        </ListItem>
-                    ))}
-                </List>
-                <Divider />
-                <List>
-                    {['Chat - Seeded <> Real', 'Notifications', 'Seeded Users & Threads'].map((text, index) => (
-                        <ListItem key={text} disablePadding sx={{ display: 'block' }}>
-                                                       <ListItemButton
-                                sx={{
-                                    minHeight: 48,
-                                    justifyContent: open ? 'initial' : 'center',
-                                    px: 2.5,
-                                }}
-                                onClick={(event) => handleListItemClick(event, text)}
-                            >
-                                <ListItemIcon
-                                    sx={{
-                                        minWidth: 0,
-                                        mr: open ? 3 : 'auto',
-                                        justifyContent: 'center',
-                                    }}
-                                >
-                                    {index ==0 &&  <ThreePOutlinedIcon /> }
-                                    {index ==1 &&  <CampaignOutlinedIcon /> }
-                                    {index ==2 &&  <ForumOutlinedIcon /> }
+                                    {text === 'Dashboard' && <InsightsIcon/>}
+                                    {text === 'Verification' && <HowToRegOutlinedIcon />}
+                                    {text === 'Configurations' && <SettingsIcon />}
+                                    {text === 'Chat - Seeded <> Real' && <ThreePOutlinedIcon />}
+                                    {text === 'Notifications' && <CampaignOutlinedIcon />}
+                                    {text === 'Seeded Users & Threads' && <ForumOutlinedIcon />}
                                 </ListItemIcon>
                                 <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
                             </ListItemButton>
@@ -302,34 +284,21 @@ export default function Landing() {
             </ThemeProvider>
             
             <Box component="main" sx={{ display: 'flex', flexGrow: 1 ,p: 3,mt:5}}>
-               {/*  <DrawerHeader /> */}
-               {page == 'Dashboard' && <Dashboard />}
-
-                {page == 'Verification' && <Verification />}
-                {page == 'Configurations' && <Configurations />}
-                {isProd && page == 'Chat - Seeded <> Real' && <Chat />}
-                {page == 'Notifications' && <Notification/>}
-                { page == 'Seeded Users & Threads' && <SeededThread/>}
-                {!isProd && (page == 'Chat - Seeded <> Real' ) && (
-                    <Typography variant="h6" color="error">
-                        This feature is not available in dev mode.
-                    </Typography>
-                )}
-              {/*   {isProd && (page == 'Seeded Users & Threads') && (
-                    <Typography variant="h6" color="error">
-                        This feature is not available in prod mode.
-                    </Typography>
-                )} */}
-                {page == '' &&
-                <div style={{justifyContent:'center',alignItems:'center', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                   {/*  <Typography gutterBottom textAlign={'center'}>
-                        <img src={Logo} width='300' height='200' alt='logo'/> 
-                    </Typography>
-                    <Typography variant="h3" gutterBottom textAlign={'center'}>
-                        Not available right now           
-                    </Typography> */}
-                    <Dashboard/>
-                </div>}
+               {userType === 'admin' && page === 'Dashboard' && <Dashboard />}
+               {page === 'Verification' && <Verification />}
+               {userType === 'admin' && page === 'Configurations' && <Configurations />}
+               {userType === 'admin' && isProd && page === 'Chat - Seeded <> Real' && <Chat />}
+               {userType === 'admin' && page === 'Notifications' && <Notification/>}
+               {page === 'Seeded Users & Threads' && <SeededThread/>}
+               {userType === 'admin' && !isProd && (page === 'Chat - Seeded <> Real' ) && (
+                   <Typography variant="h6" color="error">
+                       This feature is not available in dev mode.
+                   </Typography>
+               )}
+               {page === '' &&
+               <div style={{justifyContent:'center',alignItems:'center', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                   {userType === 'admin' ? <Dashboard/> : <Verification />}
+               </div>}
             </Box>
         </Box>
     );
